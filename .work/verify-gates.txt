@@ -1,0 +1,19 @@
+=== npm run type-check ===
+
+> ai-voice-receptionist@1.0.0 type-check
+> tsc --noEmit
+
+type-check exit=0
+
+=== npm run lint ===
+
+> ai-voice-receptionist@1.0.0 lint
+> eslint src --ext .ts,.tsx
+
+lint exit=0
+
+=== eslint files actually linted ===
+total=72 ts=42 tsx=30 errors=0 warnings=0
+
+=== dev server ===
+HTTP 000

@@ -1,0 +1,284 @@
+-- Multi-tenant AI Voice Receptionist — schema (idempotent where practical)
+-- Apply in Supabase SQL editor or via `supabase db push`.
+create extension if not exists pgcrypto;
+
+-- ── Core tenancy ────────────────────────────────────────────────
+create table if not exists public.organizations (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  slug text not null unique check (slug ~ '^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$'),
+  industry text not null default 'other',
+  timezone text not null default 'UTC',
+  plan text not null default 'trial' check (plan in ('trial','starter','growth','scale')),
+  subscription_status text not null default 'trialing',
+  stripe_customer_id text unique,
+  stripe_subscription_id text unique,
+  current_period_end timestamptz,
+  trial_ends_at timestamptz not null default (now() + interval '14 days'),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text not null,
+  full_name text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.memberships (
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  role text not null default 'member' check (role in ('owner','admin','member')),
+  created_at timestamptz not null default now(),
+  primary key (org_id, user_id)
+);
+create index if not exists memberships_user_idx on public.memberships(user_id);
+
+create table if not exists public.invites (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  email text not null,
+  role text not null default 'member' check (role in ('admin','member')),
+  token text not null unique default encode(gen_random_bytes(24), 'hex'),
+  expires_at timestamptz not null default (now() + interval '7 days'),
+  accepted_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+-- ── Voice product ───────────────────────────────────────────────
+create table if not exists public.agents (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  name text not null default 'Receptionist',
+  greeting text not null default 'Thanks for calling! How can I help you today?',
+  voice text not null default 'alloy',
+  language text not null default 'en',
+  instructions text not null default '',
+  business_hours jsonb not null default '{"mon":["09:00","17:00"],"tue":["09:00","17:00"],"wed":["09:00","17:00"],"thu":["09:00","17:00"],"fri":["09:00","17:00"]}',
+  appointment_minutes int not null default 30 check (appointment_minutes between 5 and 480),
+  transfer_number text,
+  record_consent_notice boolean not null default true,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+create index if not exists agents_org_idx on public.agents(org_id);
+
+create table if not exists public.phone_numbers (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  agent_id uuid references public.agents(id) on delete set null,
+  e164 text not null unique,
+  provider text not null default 'twilio',
+  provider_sid text,
+  status text not null default 'active',
+  created_at timestamptz not null default now()
+);
+create index if not exists phone_numbers_org_idx on public.phone_numbers(org_id);
+
+create table if not exists public.knowledge_docs (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  title text not null,
+  content text not null,
+  tsv tsvector generated always as (to_tsvector('simple', coalesce(title,'') || ' ' || coalesce(content,''))) stored,
+  created_at timestamptz not null default now()
+);
+create index if not exists knowledge_tsv_idx on public.knowledge_docs using gin(tsv);
+create index if not exists knowledge_org_idx on public.knowledge_docs(org_id);
+
+create table if not exists public.contacts (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  name text,
+  phone text,
+  email text,
+  notes text,
+  created_at timestamptz not null default now(),
+  unique (org_id, phone)
+);
+
+create table if not exists public.calls (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  agent_id uuid references public.agents(id) on delete set null,
+  contact_id uuid references public.contacts(id) on delete set null,
+  channel text not null default 'phone' check (channel in ('phone','web')),
+  direction text not null default 'inbound' check (direction in ('inbound','outbound')),
+  from_number text,
+  to_number text,
+  provider_sid text unique,
+  status text not null default 'in_progress',
+  started_at timestamptz not null default now(),
+  ended_at timestamptz,
+  duration_seconds int not null default 0,
+  transcript jsonb not null default '[]',
+  summary text,
+  created_at timestamptz not null default now()
+);
+create index if not exists calls_org_started_idx on public.calls(org_id, started_at desc);
+
+create table if not exists public.leads (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  contact_id uuid references public.contacts(id) on delete set null,
+  call_id uuid references public.calls(id) on delete set null,
+  status text not null default 'new' check (status in ('new','contacted','qualified','won','lost')),
+  intent text,
+  summary text,
+  created_at timestamptz not null default now()
+);
+create index if not exists leads_org_idx on public.leads(org_id, created_at desc);
+
+create table if not exists public.appointments (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  contact_id uuid references public.contacts(id) on delete set null,
+  call_id uuid references public.calls(id) on delete set null,
+  service text,
+  starts_at timestamptz not null,
+  ends_at timestamptz not null,
+  status text not null default 'booked' check (status in ('booked','cancelled','completed','no_show')),
+  notes text,
+  created_at timestamptz not null default now(),
+  check (ends_at > starts_at)
+);
+create index if not exists appointments_org_start_idx on public.appointments(org_id, starts_at);
+-- Hard guarantee against double-booking within a tenant
+create extension if not exists btree_gist;
+alter table public.appointments drop constraint if exists appointments_no_overlap;
+alter table public.appointments add constraint appointments_no_overlap
+  exclude using gist (org_id with =, tstzrange(starts_at, ends_at) with &&) where (status = 'booked');
+
+-- ── Billing / ops ───────────────────────────────────────────────
+create table if not exists public.stripe_events (
+  id text primary key,
+  type text not null,
+  received_at timestamptz not null default now()
+);
+
+create table if not exists public.audit_log (
+  id bigint generated always as identity primary key,
+  org_id uuid references public.organizations(id) on delete cascade,
+  actor uuid,
+  action text not null,
+  meta jsonb not null default '{}',
+  created_at timestamptz not null default now()
+);
+
+create or replace view public.org_usage_monthly with (security_invoker = true) as
+  select org_id,
+         date_trunc('month', started_at) as month,
+         count(*) as calls,
+         ceil(coalesce(sum(duration_seconds),0) / 60.0)::int as minutes
+  from public.calls group by 1, 2;
+
+-- ── Helpers + RLS ───────────────────────────────────────────────
+create or replace function public.is_member(p_org uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.memberships m where m.org_id = p_org and m.user_id = auth.uid());
+$$;
+create or replace function public.is_org_admin(p_org uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.memberships m
+    where m.org_id = p_org and m.user_id = auth.uid() and m.role in ('owner','admin'));
+$$;
+
+alter table public.organizations enable row level security;
+alter table public.profiles enable row level security;
+alter table public.memberships enable row level security;
+alter table public.invites enable row level security;
+alter table public.agents enable row level security;
+alter table public.phone_numbers enable row level security;
+alter table public.knowledge_docs enable row level security;
+alter table public.contacts enable row level security;
+alter table public.calls enable row level security;
+alter table public.leads enable row level security;
+alter table public.appointments enable row level security;
+alter table public.stripe_events enable row level security;  -- no policies: service role only
+alter table public.audit_log enable row level security;
+
+drop policy if exists org_select on public.organizations;
+create policy org_select on public.organizations for select using (public.is_member(id));
+drop policy if exists org_update on public.organizations;
+create policy org_update on public.organizations for update using (public.is_org_admin(id)) with check (public.is_org_admin(id));
+-- RLS controls which rows can be updated, not which columns. Keep billing state
+-- writable only by trusted server code and expose only tenant-editable fields.
+revoke update on table public.organizations from public, anon, authenticated;
+revoke update (plan, subscription_status, stripe_customer_id, stripe_subscription_id, current_period_end, trial_ends_at)
+  on table public.organizations from public, anon, authenticated;
+grant update (name, slug, industry, timezone) on table public.organizations to authenticated;
+
+drop policy if exists profiles_self on public.profiles;
+create policy profiles_self on public.profiles for select using (id = auth.uid());
+drop policy if exists profiles_self_update on public.profiles;
+create policy profiles_self_update on public.profiles for update using (id = auth.uid());
+
+drop policy if exists mem_select on public.memberships;
+create policy mem_select on public.memberships for select using (public.is_member(org_id));
+drop policy if exists mem_admin_delete on public.memberships;
+create policy mem_admin_delete on public.memberships for delete using (public.is_org_admin(org_id) and role <> 'owner');
+
+drop policy if exists invites_admin on public.invites;
+create policy invites_admin on public.invites for all using (public.is_org_admin(org_id)) with check (public.is_org_admin(org_id));
+
+-- Tenant data: members read; admins write config; call-derived rows are written by the service role
+do $$
+declare t text;
+begin
+  foreach t in array array['agents','phone_numbers','knowledge_docs'] loop
+    execute format('drop policy if exists %I_read on public.%I', t, t);
+    execute format('create policy %I_read on public.%I for select using (public.is_member(org_id))', t, t);
+    execute format('drop policy if exists %I_write on public.%I', t, t);
+    execute format('create policy %I_write on public.%I for all using (public.is_org_admin(org_id)) with check (public.is_org_admin(org_id))', t, t);
+  end loop;
+  foreach t in array array['contacts','calls','leads','appointments'] loop
+    execute format('drop policy if exists %I_read on public.%I', t, t);
+    execute format('create policy %I_read on public.%I for select using (public.is_member(org_id))', t, t);
+    execute format('drop policy if exists %I_write on public.%I', t, t);
+    execute format('create policy %I_write on public.%I for update using (public.is_member(org_id)) with check (public.is_member(org_id))', t, t);
+  end loop;
+end $$;
+
+drop policy if exists audit_read on public.audit_log;
+create policy audit_read on public.audit_log for select using (public.is_org_admin(org_id));
+
+-- Profile bootstrap on signup
+create or replace function public.handle_new_user() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, email, full_name)
+  values (new.id, new.email, new.raw_user_meta_data->>'full_name')
+  on conflict (id) do nothing;
+  return new;
+end $$;
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- Atomic tenant creation: org + owner membership + default agent
+create or replace function public.create_organization(p_name text, p_slug text, p_industry text, p_timezone text)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare v_org uuid;
+begin
+  if auth.uid() is null then raise exception 'not authenticated'; end if;
+  insert into organizations (name, slug, industry, timezone)
+  values (p_name, lower(p_slug), coalesce(p_industry,'other'), coalesce(p_timezone,'UTC'))
+  returning id into v_org;
+  insert into memberships (org_id, user_id, role) values (v_org, auth.uid(), 'owner');
+  insert into agents (org_id, name, greeting, instructions)
+  values (v_org, p_name || ' Receptionist',
+          'Thank you for calling ' || p_name || '. How can I help you today?',
+          'You are the friendly receptionist for ' || p_name || '. Be concise, warm and accurate. Never invent prices, availability or policies — use the knowledge and tools provided.');
+  return v_org;
+end $$;
+revoke all on function public.create_organization(text,text,text,text) from public, anon;
+grant execute on function public.create_organization(text,text,text,text) to authenticated;
+
+-- Knowledge lookup used by the voice agent (service role)
+create or replace function public.search_knowledge(p_org uuid, p_query text, p_limit int default 3)
+returns table (title text, content text) language sql stable as $$
+  select title, left(content, 1200) from public.knowledge_docs
+  where org_id = p_org and tsv @@ websearch_to_tsquery('simple', p_query)
+  order by ts_rank(tsv, websearch_to_tsquery('simple', p_query)) desc
+  limit p_limit;
+$$;

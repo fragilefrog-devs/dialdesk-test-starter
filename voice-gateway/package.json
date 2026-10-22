@@ -1,0 +1,14 @@
+{
+  "name": "voice-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p .",
+    "start": "node dist/index.js",
+    "type-check": "tsc --noEmit -p ."
+  },
+  "dependencies": { "ws": "^8.18.0" },
+  "devDependencies": { "@types/node": "^20.17.30", "@types/ws": "^8.5.12", "tsx": "^4.19.0", "typescript": "^5.8.3" }
+}

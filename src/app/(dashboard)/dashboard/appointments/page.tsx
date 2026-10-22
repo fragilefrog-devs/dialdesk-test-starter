@@ -1,0 +1,33 @@
+import type { Metadata } from 'next'
+import { requireOrg } from '@/lib/auth'
+import { cancelAppointment } from '../actions'
+import { Badge, btn, Card, Empty, PageHeader, fmtDate } from '@/components/ui'
+export const metadata: Metadata = { title: 'Appointments' }
+
+export default async function Appointments() {
+  const { supabase, org } = await requireOrg()
+  const { data: rows } = await supabase.from('appointments').select('id, service, starts_at, status, notes, contacts(name, phone)')
+    .eq('org_id', org.id).gte('starts_at', new Date(Date.now() - 86400000).toISOString()).order('starts_at').limit(200)
+  return (
+    <>
+      <PageHeader title="Appointments" sub={`Times shown in ${org.timezone}.`} />
+      {!rows?.length ? <Empty title="Nothing booked yet" body="Appointments your receptionist books will appear here." /> : (
+        <div className="space-y-3">
+          {rows.map((a) => {
+            const c = a.contacts as unknown as { name: string | null; phone: string | null } | null
+            return (
+              <Card key={a.id} className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-brand-950">{fmtDate(a.starts_at, org.timezone)} <Badge tone={a.status === 'booked' ? 'good' : 'neutral'}>{a.status}</Badge></p>
+                  <p className="text-sm text-brand-900">{c?.name ?? 'Unknown'} · {c?.phone}{a.service ? ` · ${a.service}` : ''}</p>
+                  {a.notes && <p className="text-sm text-brand-800/70">{a.notes}</p>}
+                </div>
+                {a.status === 'booked' && <form action={cancelAppointment}><input type="hidden" name="id" value={a.id} /><button className={btn.danger}>Cancel</button></form>}
+              </Card>
+            )
+          })}
+        </div>
+      )}
+    </>
+  )
+}

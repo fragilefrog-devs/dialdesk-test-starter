@@ -1,0 +1,220 @@
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.113.246.42:3000
+- Environments: .env.local
+✓ Ready in 3.7s
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+✓ Running next.config.mjs took 202ms
+○ Compiling middleware ...
+
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+○ Compiling /login ...
+ GET /login 200 in 5.2s (next.js: 4.9s, proxy.ts: 98ms, application-code: 219ms)
+ GET /login?error=testmsg&next=%2Fonboarding 200 in 9.5s (next.js: 9.4s, proxy.ts: 8ms, application-code: 165ms)
+[?25h
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.113.246.42:3000
+- Environments: .env.local
+✓ Ready in 4.5s
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+✓ Running next.config.mjs took 186ms
+○ Compiling middleware ...
+
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+○ Compiling /login ...
+ GET /login?welcome=1&next=%2Fdashboard 200 in 5.6s (next.js: 5.3s, proxy.ts: 5ms, application-code: 294ms)
+ GET /login?error=LOGINERR 200 in 5.7s (next.js: 5.5s, proxy.ts: 100ms, application-code: 100ms)
+ GET /invite/abc123token 307 in 18.9s (next.js: 18.7s, proxy.ts: 103ms, application-code: 119ms)
+ GET /login?next=/invite/abc123token 200 in 187ms (next.js: 6ms, proxy.ts: 11ms, application-code: 170ms)
+ GET /sites/testslug 404 in 20.2s (next.js: 18.9s, proxy.ts: 105ms, application-code: 1198ms)
+ GET /invite/abc123token 307 in 1958ms (next.js: 1648ms, proxy.ts: 8ms, application-code: 302ms)
+ GET /login?error=E1&notice=N1&next=%2Fonboarding 200 in 2.3s (next.js: 2.2s, proxy.ts: 4ms, application-code: 88ms)
+ GET /login?next=/invite/abc123token 200 in 650ms (next.js: 591ms, proxy.ts: 4ms, application-code: 55ms)
+ GET /sites/testslug 404 in 531ms (next.js: 213ms, proxy.ts: 8ms, application-code: 309ms)
+○ Compiling /_not-found/page ...
+ GET /definitely-not-a-real-route-xyz 404 in 8.0s (next.js: 8.0s, proxy.ts: 5ms, application-code: 41ms)
+ GET /onboarding 200 in 2.8s (next.js: 1274ms, proxy.ts: 866ms, application-code: 696ms)
+ GET /health 404 in 135ms (next.js: 69ms, proxy.ts: 14ms, application-code: 52ms)
+[?25h
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.113.246.42:3000
+- Environments: .env.local
+✓ Ready in 3.3s
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+✓ Running next.config.mjs took 191ms
+○ Compiling middleware ...
+
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+ GET /onboarding 200 in 3.4s (next.js: 1586ms, proxy.ts: 607ms, application-code: 1175ms)
+[?25h
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.113.246.42:3000
+- Environments: .env.local
+✓ Ready in 17.5s
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+✓ Running next.config.mjs took 243ms
+○ Compiling middleware ...
+
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+○ Compiling /onboarding ...
+ GET /onboarding 200 in 41s (next.js: 36.7s, proxy.ts: 631ms, application-code: 3.5s)
+[?25h
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.113.246.42:3000
+- Environments: .env.local
+✓ Ready in 7.4s
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+✓ Running next.config.mjs took 266ms
+○ Compiling middleware ...
+
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+○ Compiling /onboarding ...
+ GET /onboarding 200 in 36.1s (next.js: 32.2s, proxy.ts: 1103ms, application-code: 2.8s)
+[?25h
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.113.246.42:3000
+- Environments: .env.local
+✓ Ready in 7.1s
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+✓ Running next.config.mjs took 212ms
+○ Compiling middleware ...
+
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+○ Compiling /onboarding ...
+ GET /onboarding 200 in 34.8s (next.js: 31.6s, proxy.ts: 693ms, application-code: 2.5s)
+✓ Compiled in 13.7s
+[?25h
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.113.246.42:3000
+- Environments: .env.local
+✓ Ready in 38.4s
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+✓ Running next.config.mjs took 7.0s
+○ Compiling middleware ...
+
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+○ Compiling /login ...
+ GET /login 200 in 11.8s (next.js: 11.2s, proxy.ts: 5ms, application-code: 604ms)
+ GET /onboarding 200 in 59s (next.js: 57s, proxy.ts: 764ms, application-code: 1337ms)
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+○ Compiling /dashboard ...
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+ GET /dashboard?welcome=1 200 in 8.1s (next.js: 7.0s, proxy.ts: 111ms, application-code: 909ms)
+ POST /onboarding 200 in 9.6s (next.js: 730ms, proxy.ts: 140ms, application-code: 8.8s)
+  └─ ƒ createOrganization({}) in 693ms src/app/onboarding/actions.ts
+ GET /onboarding?error=That+web+address+is+taken. 200 in 449ms (next.js: 7ms, proxy.ts: 119ms, application-code: 323ms)
+ POST /onboarding 200 in 754ms (next.js: 6ms, proxy.ts: 110ms, application-code: 638ms)
+  └─ ƒ createOrganization({}) in 148ms src/app/onboarding/actions.ts
+ POST /dashboard?welcome=1 200 in 920ms (next.js: 13ms, proxy.ts: 143ms, application-code: 764ms)
+ GET /dashboard 200 in 732ms (next.js: 50ms, proxy.ts: 151ms, application-code: 530ms)
+ GET /dashboard 200 in 706ms (next.js: 6ms, proxy.ts: 113ms, application-code: 587ms)
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+○ Compiling /dashboard/calls ...
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+ GET /dashboard/install 200 in 6.6s (next.js: 5.8s, proxy.ts: 399ms, application-code: 467ms)
+ GET /dashboard/calls 200 in 11.3s (next.js: 10.5s, proxy.ts: 232ms, application-code: 541ms)
+ GET /dashboard/install 200 in 544ms (next.js: 32ms, proxy.ts: 167ms, application-code: 345ms)
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+ GET /login 200 in 275ms (next.js: 102ms, proxy.ts: 9ms, application-code: 165ms)
+ GET /sites/b-dental 200 in 9.5s (next.js: 8.7s, proxy.ts: 149ms, application-code: 679ms)
+○ Compiling /api/widget-script ...
+ GET /widget.js 200 in 906ms (next.js: 802ms, application-code: 104ms)
+ POST /api/realtime/session 500 in 1039ms (next.js: 94ms, application-code: 945ms)
+ POST /api/realtime/session 500 in 412ms (next.js: 1.2ms, application-code: 411ms)
+○ Compiling /dashboard/agent ...
+ GET /dashboard/agent 200 in 4.6s (next.js: 3.8s, proxy.ts: 381ms, application-code: 433ms)
+ GET /dashboard/agent?ok=Saved.+New+calls+use+these+settings+immediately. 200 in 465ms (next.js: 8ms, proxy.ts: 84ms, application-code: 373ms)
+ POST /dashboard/agent 200 in 1205ms (next.js: 22ms, proxy.ts: 240ms, application-code: 943ms)
+  └─ ƒ saveAgent({}) in 447ms src/app/(dashboard)/dashboard/actions.ts
+ GET /sites/b-dental 200 in 465ms (next.js: 125ms, proxy.ts: 131ms, application-code: 208ms)
+ GET /widget.js 200 in 59ms (next.js: 1.5ms, application-code: 58ms)
+ POST /api/realtime/session 500 in 500ms (next.js: 2ms, application-code: 498ms)
+[?25h
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.113.246.42:3000
+- Environments: .env.local
+✓ Ready in 4.7s
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+✓ Running next.config.mjs took 196ms
+○ Compiling middleware ...
+
+[next.config] NEXT_PUBLIC_SUPABASE_URL <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_ANON_KEY <- .env.local (overrides ambient environment)
+[next.config] NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY <- .env.local (overrides ambient environment)
+[next.config] SUPABASE_SERVICE_ROLE_KEY <- .env.local (overrides ambient environment)
+○ Compiling /sites/[slug] ...
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+ GET /dashboard/install 200 in 57s (next.js: 54s, proxy.ts: 118ms, application-code: 3.6s)
+ GET /sites/b-dental 200 in 65s (next.js: 63s, proxy.ts: 403ms, application-code: 1908ms)
+ GET /dashboard/agent?ok=Saved.%20New%20calls%20use%20these%20settings%20immediately. 200 in 66s (next.js: 61s, proxy.ts: 607ms, application-code: 4.6s)
+○ Compiling /login ...
+ GET /login 200 in 8.7s (next.js: 8.3s, proxy.ts: 184ms, application-code: 269ms)
+○ Compiling /dashboard ...
+ GET /dashboard 200 in 18.4s (next.js: 12.6s, proxy.ts: 570ms, application-code: 5.2s)
+✓ Finished filesystem cache database compaction in 23.9s
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (1.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\H:\\ai-voice-receptionist-saas\\starter\\dev.supervisor.log").
+○ Compiling /_not-found/page ...
+ GET / 200 in 98s (next.js: 98s, proxy.ts: 463ms, application-code: 154ms)
+ POST /api/realtime/session 500 in 2.8s (next.js: 1085ms, application-code: 1687ms)
+ POST /api/realtime/session 404 in 101ms (next.js: 2.0ms, application-code: 99ms)
+ GET /health 404 in 1332ms (next.js: 1264ms, proxy.ts: 6ms, application-code: 62ms)
+[?25h

@@ -1,0 +1,38 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Validate signup error handling",
+			"type": "shell",
+			"command": "npm run type-check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; npm run lint",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Next.js app (Webpack)",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev",
+				"--",
+				"--webpack"
+			],
+			"isBackground": true,
+			"problemMatcher": [
+				{
+					"pattern": {
+						"regexp": "^(.*)$",
+						"message": 1
+					},
+					"background": {
+						"activeOnStart": true,
+						"beginsPattern": "^> next dev --webpack$",
+						"endsPattern": "Ready in"
+					}
+				}
+			],
+			"group": "build"
+		}
+	]
+}
