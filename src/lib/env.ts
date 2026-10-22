@@ -93,6 +93,8 @@ const internalSchema = schema.pick({
   INTERNAL_API_SECRET: true,
 })
 
+const appSchema = schema.pick({ NEXT_PUBLIC_APP_URL: true })
+
 /** Builds a validating accessor for one scoped schema. Same throw format as `env()`. */
 const scoped = <S extends z.ZodTypeAny>(scopedSchema: S) => {
   let scopedCache: z.infer<S> | null = null
@@ -120,6 +122,8 @@ export const twilioEnv = scoped(twilioSchema)
 export const emailEnv = scoped(emailSchema)
 /** Shared gateway<->server secret only. */
 export const internalEnv = scoped(internalSchema)
+/** Public app URL only (webhooks, Twilio callback URLs). */
+export const appEnv = scoped(appSchema)
 
 export const adminEmails = () =>
   (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)

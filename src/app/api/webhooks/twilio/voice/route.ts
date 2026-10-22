@@ -2,7 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { validateTwilioSignature } from '@/lib/twilio'
 import { signCall } from '@/lib/token'
 import { canTakeCalls } from '@/lib/plans'
-import { env } from '@/lib/env'
+import { appEnv, voiceEnv } from '@/lib/env'
 
 export const dynamic = 'force-dynamic'
 const xml = (body: string) => new Response(`<?xml version="1.0" encoding="UTF-8"?><Response>${body}</Response>`, { headers: { 'Content-Type': 'text/xml' } })
@@ -10,7 +10,7 @@ const esc = (s: string) => s.replace(/[<>&"']/g, (c) => `&#${c.charCodeAt(0)};`)
 
 export async function POST(req: Request) {
   const params = Object.fromEntries(new URLSearchParams(await req.text())) as Record<string, string>
-  const url = `${env().NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/voice`
+  const url = `${appEnv().NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/voice`
   if (!validateTwilioSignature(url, params, req.headers.get('x-twilio-signature'))) return new Response('Forbidden', { status: 403 })
 
   const db = supabaseAdmin()
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   if (error || !call) return xml('<Say>Sorry, something went wrong. Please call again.</Say><Hangup/>')
 
   return xml(
-    `<Connect><Stream url="${esc(env().VOICE_GATEWAY_URL)}">` +
+    `<Connect><Stream url="${esc(voiceEnv().VOICE_GATEWAY_URL)}">` +
     `<Parameter name="callId" value="${call.id}"/><Parameter name="token" value="${signCall(call.id)}"/>` +
     `</Stream></Connect>`,
   )

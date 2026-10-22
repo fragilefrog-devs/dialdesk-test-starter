@@ -17,11 +17,11 @@ function required(k: string): string {
 const internal = (path: string, init?: RequestInit) =>
   fetch(APP_URL + path, { ...init, headers: { 'content-type': 'application/json', 'x-internal-secret': SECRET, ...init?.headers } })
 
-const server = http.createServer((req, res) => {
+export const server = http.createServer((req, res) => {
   if (req.url === '/health') { res.writeHead(200); res.end('ok'); return }
   res.writeHead(404); res.end()
 })
-const wss = new WebSocketServer({ noServer: true })
+export const wss = new WebSocketServer({ noServer: true })
 
 type Line = { role: 'caller' | 'agent'; text: string }
 type HistoryLine = { role: 'user' | 'assistant'; content: string }
@@ -185,4 +185,8 @@ server.on('upgrade', (request, socket, head) => {
   })
 })
 
-server.listen(PORT, () => console.log(`voice-gateway listening on :${PORT}`))
+export { handleConnection }
+export function start(port: number = PORT) {
+  server.listen(port, () => console.log(`voice-gateway listening on :${port}`))
+}
+if (process.env.GATEWAY_NO_LISTEN !== '1') start()

@@ -1,12 +1,12 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { validateTwilioSignature } from '@/lib/twilio'
-import { env } from '@/lib/env'
+import { appEnv } from '@/lib/env'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: Request) {
   const params = Object.fromEntries(new URLSearchParams(await req.text())) as Record<string, string>
-  const url = `${env().NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/status`
+  const url = `${appEnv().NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/status`
   if (!validateTwilioSignature(url, params, req.headers.get('x-twilio-signature'))) return new Response('Forbidden', { status: 403 })
 
   const final = ['completed', 'busy', 'failed', 'no-answer', 'canceled'].includes(params.CallStatus)

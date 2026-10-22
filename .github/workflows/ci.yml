@@ -10,6 +10,7 @@ jobs:
       - run: npm ci
       - run: npm run type-check
       - run: npm run lint
+      - run: npm test
       - run: npm run build
         env:
           NEXT_PUBLIC_APP_URL: http://localhost:3000
@@ -27,4 +28,5 @@ jobs:
           cache-dependency-path: voice-gateway/package-lock.json
       - run: npm ci
       - run: npm run type-check
+      - run: npm test
       - run: npm run build

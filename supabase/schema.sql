@@ -113,7 +113,10 @@ create table if not exists public.calls (
   duration_seconds int not null default 0,
   transcript jsonb not null default '[]',
   summary text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  finalized_at timestamp with time zone,
+  finalize_attempts integer not null default 0,
+  end_reason text
 );
 create index if not exists calls_org_started_idx on public.calls(org_id, started_at desc);
 
@@ -282,3 +285,50 @@ returns table (title text, content text) language sql stable as $$
   order by ts_rank(tsv, websearch_to_tsquery('simple', p_query)) desc
   limit p_limit;
 $$;
+
+-- Idempotent call finalization (service role only)
+create or replace function public.finalize_call(
+  p_org uuid,
+  p_call uuid,
+  p_transcript jsonb,
+  p_duration_seconds integer,
+  p_end_reason text
+) returns table (finalized boolean)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from calls where id = p_call and org_id = p_org) then
+    return;
+  end if;
+
+  if exists (select 1 from calls where id = p_call and org_id = p_org
+              and finalized_at is not null) then
+    return query select false;
+    return;
+  end if;
+
+  update calls c
+     set transcript = coalesce(p_transcript, c.transcript),
+         duration_seconds = greatest(coalesce(p_duration_seconds, 0),
+                                     coalesce(c.duration_seconds, 0)),
+         end_reason = coalesce(p_end_reason, c.end_reason),
+         ended_at = coalesce(c.ended_at, now()),
+         status = case
+           when c.status in ('completed','failed','busy','no_answer','canceled')
+             then c.status
+           else 'completed'
+         end,
+         finalized_at = now(),
+         finalize_attempts = c.finalize_attempts + 1
+   where c.id = p_call and c.org_id = p_org;
+
+  return query select true;
+end;
+$$;
+
+revoke all on function public.finalize_call(uuid, uuid, jsonb, integer, text)
+  from public, anon, authenticated;
+grant execute on function public.finalize_call(uuid, uuid, jsonb, integer, text)
+  to service_role;
