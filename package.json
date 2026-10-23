@@ -44,11 +44,11 @@
     "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.21",
     "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.35",
+    "eslint-config-next": "^16.4.2",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.8.3",
-    "vitest": "^2.1.9"
+    "vitest": "^5.0.5"
   },
   "engines": {
     "node": ">=20"
