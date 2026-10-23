@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { ChevronDown } from 'lucide-react'
+import { LiveCall } from '@/components/LiveCall'
+import { BellRing, ChevronDown, MessageSquareText, PhoneForwarded, Siren, SlidersHorizontal, Wrench } from 'lucide-react'
 import { SiteHeader, SiteFooter, PricingGrid, Wordmark } from '@/components/marketing'
 import { btn } from '@/components/ui'
 
@@ -21,74 +22,103 @@ const faqs = [
   ['Where does it work?', 'Numbers are US area codes today, and it books in your own time zone.'],
 ]
 
+const pathIcons = [Siren, Wrench, MessageSquareText]
+const stepIcons = [SlidersHorizontal, PhoneForwarded, BellRing]
+
 export default function Home() {
   return (
     <>
       <SiteHeader />
       <main>
-        <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-24 pt-16 md:px-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div>
-            <h1 className="font-display text-5xl font-semibold leading-[1.1] tracking-[-0.01em] text-ink sm:text-7xl">Every call answered. Every emergency flagged.</h1>
-            <p className="mt-5 max-w-xl text-lg text-muted">DialDesk answers your phone while you are under a sink, books the job into an arrival window, and texts you the details. Emergencies reach your on-call tech in seconds.</p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link href="/signup" className={btn.signal}>Start your 14-day free trial</Link>
-              <Link href="#how" className="font-semibold text-primary underline underline-offset-4">See how it works</Link>
+        <section className="marketing-hero relative overflow-hidden border-b border-line bg-canvas">
+          <div className="relative mx-auto grid max-w-[1400px] items-center gap-12 px-4 pb-16 pt-12 md:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:py-16">
+            <div className="relative">
+              <p className="rise mb-5 inline-flex min-h-8 items-center rounded-lg border border-line bg-surface px-3 py-1 text-sm font-semibold text-primary" style={{ ['--i' as string]: 0 }}>
+                AI receptionist for plumbing and HVAC
+              </p>
+              <h1 className="rise max-w-[660px] font-display text-4xl font-extrabold leading-[1.12] tracking-tight text-ink sm:text-[42px] xl:text-[48px]" style={{ ['--i' as string]: 1 }}>
+                Every call answered.<span className="block text-primary">Every emergency flagged.</span>
+              </h1>
+              <p className="rise mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg" style={{ ['--i' as string]: 2 }}>DialDesk answers your phone while you are under a sink, books the job into an arrival window, and texts you the details. Emergencies reach your on-call tech in seconds.</p>
+              <div className="rise mt-7 flex flex-wrap items-center gap-3" style={{ ['--i' as string]: 3 }}>
+                <Link href="/signup" className={`${btn.primary} min-h-12 px-6`}>Start your 14-day free trial</Link>
+                <Link href="#how" className={`${btn.secondary} px-5`}>See how it works</Link>
+              </div>
+              <div className="rise mt-7 flex flex-wrap gap-x-8 gap-y-3 border-t border-line pt-5 text-sm" style={{ ['--i' as string]: 4 }}>
+                <p><span className="font-display text-2xl font-bold text-primary">14 days</span><span className="ml-2 text-muted">free, no card</span></p>
+                <p><span className="font-display text-2xl font-bold text-primary">3 outcomes</span><span className="ml-2 text-muted">for every call</span></p>
+              </div>
             </div>
-            <p className="mt-3 text-sm text-muted">No card to start. Works with the number you already have.</p>
-          </div>
 
-          <aside aria-label="Example text message" className="rise relative rounded-xl border border-line bg-surface p-6 shadow-elevated before:absolute before:inset-y-0 before:left-0 before:w-1 before:rounded-l-xl before:bg-danger" style={{ ['--i' as string]: 1 }}>
-            <p className="text-sm text-faint">Text to the owner, 9:42 PM</p>
-            <p className="rise mt-2 font-display text-3xl text-danger" style={{ ['--i' as string]: 2 }}>Emergency: flooding</p>
-            <dl className="mt-4 space-y-3">
-              {[['Problem', 'Water coming through the kitchen ceiling'], ['Address', '14 Alder St, 60614'], ['Caller', 'Maria R., +1 773 555 0142'], ['Status', 'Transferred to the on-call tech']].map(([k, v], i) => (
-                <div key={k} className="rise" style={{ ['--i' as string]: i + 3 }}><dt className="text-sm text-faint">{k}</dt><dd className="font-medium text-ink">{v}</dd></div>
-              ))}
-            </dl>
-          </aside>
-        </section>
-
-        <section className="border-y border-line bg-surface py-24">
-          <div className="mx-auto grid max-w-6xl gap-12 px-4 md:px-6 lg:grid-cols-[5fr_7fr]">
-            <div className="reveal">
-              <h2 className="font-display text-4xl leading-[1.15] text-ink sm:text-5xl">Every call ends one of three ways</h2>
-              <p className="mt-4 max-w-md text-muted">It never quotes prices, diagnoses problems or promises an exact arrival time.</p>
-            </div>
-            <dl className="divide-y divide-line border-y border-line">
-              {paths.map(([t, d]) => (
-                <div key={t} className="reveal py-6">
-                  <dt className="font-display text-2xl text-ink">{t}</dt>
-                  <dd className="mt-2 max-w-prose text-muted">{d}</dd>
+            <div className="marketing-hero__preview space-y-4">
+              <LiveCall />
+              <aside aria-label="Example emergency text message" className="rise glass relative rounded-xl border border-line p-6 shadow-elevated before:absolute before:inset-y-0 before:left-0 before:w-1 before:rounded-l-xl before:bg-danger" style={{ ['--i' as string]: 1 }}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-muted">Example emergency alert</p>
+                  <span className="rounded-lg bg-danger-soft px-2.5 py-1 text-xs font-semibold text-danger">Urgent</span>
                 </div>
-              ))}
-            </dl>
+                <p className="rise mt-3 font-display text-2xl font-bold text-ink" style={{ ['--i' as string]: 2 }}>Flooding reported</p>
+                <dl className="mt-3 grid gap-x-5 gap-y-3 sm:grid-cols-2">
+                  {[['Problem', 'Water coming through the kitchen ceiling'], ['Address', '14 Alder St, 60614'], ['Caller', 'Maria R., +1 773 555 0142'], ['Status', 'On-call technician alerted']].map(([key, value], index) => (
+                    <div key={key} className="rise" style={{ ['--i' as string]: index + 3 }}><dt className="text-xs font-medium text-faint">{key}</dt><dd className="mt-0.5 text-sm font-medium text-ink">{value}</dd></div>
+                  ))}
+                </dl>
+              </aside>
+            </div>
           </div>
         </section>
 
-        <section id="how" className="mx-auto max-w-6xl px-4 py-24 md:px-6">
-          <h2 className="reveal font-display text-4xl leading-[1.15] text-ink sm:text-5xl">Live in an afternoon</h2>
-          <ol className="mt-12 divide-y divide-line border-y border-line">
-            {steps.map(([t, d], i) => (
-              <li key={t} className="reveal grid gap-4 py-8 md:grid-cols-[6rem_1fr_1.4fr] md:items-baseline md:gap-8">
-                <span className="font-display text-5xl leading-[1.1] tabular-nums text-primary">{i + 1}</span>
-                <h3 className="font-display text-2xl text-ink">{t}</h3>
-                <p className="max-w-prose text-muted">{d}</p>
-              </li>
-            ))}
+        <section id="features" className="border-y border-line bg-surface py-20 sm:py-24">
+          <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+            <h2 className="reveal max-w-2xl font-display text-3xl font-extrabold leading-[1.15] tracking-tight text-ink sm:text-4xl">Every call ends one of three ways</h2>
+            <p className="reveal mt-3 max-w-md text-muted">It never quotes prices, diagnoses problems or promises an exact arrival time.</p>
+            <div className="mt-10 grid gap-4 md:grid-cols-2">
+              {paths.map(([title, description], index) => {
+                const Icon = pathIcons[index]
+                return (
+                  <div key={title} className={`reveal bento rounded-xl border border-line p-6 shadow-card sm:p-8 ${index === 0 ? 'bg-danger-soft' : index === 1 ? 'bg-canvas' : 'bg-surface-2 md:col-span-2 md:flex md:items-center md:gap-8'}`}>
+                    <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-lg ${index === 0 ? 'bg-surface text-danger' : 'bg-surface-2 text-primary'}`}><Icon className="h-6 w-6" aria-hidden /></span>
+                    <div className={index === 2 ? 'mt-5 md:mt-0' : 'mt-5'}>
+                      <h3 className="font-display text-2xl text-ink">{title}</h3>
+                      <p className="mt-2 max-w-prose text-muted">{description}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section id="how" className="mx-auto max-w-[1400px] px-4 py-20 md:px-8 sm:py-24">
+          <h2 className="reveal font-display text-3xl font-extrabold leading-[1.15] tracking-tight text-ink sm:text-4xl">Live in an afternoon</h2>
+          <ol className="mt-10 grid gap-4 md:grid-cols-3">
+            {steps.map(([title, description], index) => {
+              const Icon = stepIcons[index]
+              return (
+                <li key={title} className="reveal bento rounded-xl border border-line bg-surface p-6 shadow-card">
+                  <div className="flex items-center justify-between">
+                    <span className="grid h-11 w-11 place-items-center rounded-lg bg-surface-2 text-primary"><Icon className="h-5 w-5" aria-hidden /></span>
+                    <span aria-hidden className="text-gradient font-display text-5xl leading-none tabular-nums">{index + 1}</span>
+                  </div>
+                  <h3 className="mt-6 font-display text-2xl text-ink"><span className="sr-only">Step {index + 1}: </span>{title}</h3>
+                  <p className="mt-2 text-muted">{description}</p>
+                </li>
+              )
+            })}
           </ol>
         </section>
 
-        <section id="pricing" className="border-t border-line bg-surface py-24">
-          <div className="mx-auto max-w-6xl px-4 md:px-6">
-            <h2 className="reveal font-display text-4xl leading-[1.15] text-ink sm:text-5xl">One saved job pays for the year</h2>
+        <section id="pricing" className="border-t border-line bg-surface py-20 sm:py-24">
+          <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+            <h2 className="reveal font-display text-3xl font-extrabold leading-[1.15] tracking-tight text-ink sm:text-4xl">One saved job pays for the year</h2>
             <p className="reveal mb-12 mt-4 max-w-prose text-muted">Flat monthly price with call minutes included. Cancel anytime.</p>
             <PricingGrid />
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-24 md:px-6">
+        <section className="mx-auto max-w-[1400px] px-4 py-20 md:px-8 sm:py-24">
           <div className="grid gap-12 lg:grid-cols-[5fr_7fr]">
-            <h2 className="reveal font-display text-4xl leading-[1.15] text-ink sm:text-5xl">Questions</h2>
+            <h2 className="reveal font-display text-3xl leading-[1.15] text-ink sm:text-5xl">Questions</h2>
             <div className="divide-y divide-line border-y border-line">
               {faqs.map(([q, a]) => (
                 <details key={q} className="group">
@@ -102,10 +132,10 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="bg-band py-16">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-8 px-4 md:px-6">
-            <div><Wordmark light /><p className="mt-4 font-display text-4xl leading-[1.15] text-[#e8eef2] sm:text-5xl">Stop losing jobs to voicemail.</p></div>
-            <Link href="/signup" className={btn.signal}>Start your free trial</Link>
+        <section className="relative overflow-hidden bg-band py-16 sm:py-20">
+          <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-8 px-4 md:px-8">
+            <div><Wordmark light /><p className="mt-4 max-w-xl font-display text-3xl font-extrabold leading-[1.15] tracking-tight text-band-fg sm:text-4xl">Stop losing jobs to voicemail.</p></div>
+            <Link href="/signup" className={`${btn.signal} cta-glow`}>Start your free trial</Link>
           </div>
         </section>
       </main>

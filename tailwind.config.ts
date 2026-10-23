@@ -7,8 +7,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Barlow", "system-ui", "sans-serif"],
-        display: ["Barlow Condensed", "Barlow", "system-ui", "sans-serif"],
+        sans: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
+        display: ["var(--font-manrope)", "system-ui", "sans-serif"],
       },
       colors: {
         canvas: "var(--canvas)",
@@ -24,9 +24,10 @@ const config: Config = {
         good: { DEFAULT: "var(--good)", soft: "var(--good-soft)" },
         warn: { DEFAULT: "var(--warn)", soft: "var(--warn-soft)" },
         band: "var(--band)",
+        "band-fg": "var(--band-fg)",
       },
-      // One radius scale: 8px controls, 12px panels.
-      borderRadius: { DEFAULT: "8px", lg: "8px", xl: "12px" },
+      // Matched to the mockup: 10px controls and 15px panels.
+      borderRadius: { DEFAULT: "10px", lg: "10px", xl: "15px" },
       // Hairline border first; shadows stay diffuse and under 0.08 alpha. Dark mode swaps shadow for an edge highlight.
       boxShadow: {
         soft: "0 1px 2px 0 var(--shadow)",

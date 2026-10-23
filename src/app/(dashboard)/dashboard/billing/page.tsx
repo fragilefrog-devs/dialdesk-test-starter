@@ -2,11 +2,12 @@ import type { Metadata } from 'next'
 import { requireOrg } from '@/lib/auth'
 import { PLANS, limitsFor } from '@/lib/plans'
 import { CheckoutButton, PortalButton } from '@/components/BillingButtons'
-import { Badge, Card, Notice, PageHeader, fmtDate } from '@/components/ui'
+import { BillingConfirmation } from '@/components/BillingConfirmation'
+import { Badge, Card, PageHeader, fmtDate } from '@/components/ui'
 export const metadata: Metadata = { title: 'Billing' }
 
-export default async function Billing({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
-  const { status } = await searchParams
+export default async function Billing({ searchParams }: { searchParams: Promise<{ status?: string; session_id?: string }> }) {
+  const { status, session_id: checkoutSessionId } = await searchParams
   const { supabase, org, role } = await requireOrg()
   const monthStart = new Date(); monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0)
   const { data: u } = await supabase.from('org_usage_monthly').select('minutes').eq('org_id', org.id).eq('month', monthStart.toISOString()).maybeSingle()
@@ -15,7 +16,9 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
   return (
     <>
       <PageHeader title="Billing" />
-      {status === 'success' && <Notice kind="success">Thanks! Your plan will update in a few seconds.</Notice>}
+      {(status === 'success' || status === 'refresh') && (
+        <BillingConfirmation checkoutSessionId={status === 'success' ? checkoutSessionId : undefined} />
+      )}
       <Card className="mb-6">
         <p className="text-sm text-muted">Current plan</p>
         <p className="mt-1 flex items-center gap-2 text-2xl font-semibold capitalize text-ink">{org.plan}<Badge tone={org.subscription_status === 'active' ? 'good' : 'warn'}>{org.subscription_status}</Badge></p>

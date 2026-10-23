@@ -18,6 +18,8 @@ Caller ──> Vapi number ──> Vapi assistant (speech, LLM, voice)
 | Trades logic: service area, arrival windows, outcomes | `src/lib/trades.ts` |
 | System prompt and emergency script | `src/lib/trades-prompt.ts` |
 | Vapi client, assistant sync, webhook handlers | `src/lib/vapi*.ts`, `src/app/api/vapi/webhook` |
+| Checkout, plan confirmation, Stripe webhook reconciliation | `src/app/api/billing/`, `src/app/api/webhooks/stripe/route.ts`, `src/lib/billing-sync.ts` |
+| Shared dashboard shell, brand mark and wordmark | `src/components/DashboardChrome.tsx`, `src/components/marketing.tsx`, `public/dialdesk-mark.svg`, `public/dialdesk-logo.svg` |
 | Schema, RLS, capacity booking | `supabase/schema.sql`, `supabase/migrations/` |
 | Retired self-hosted voice path | `legacy/voice-gateway/` |
 
@@ -42,3 +44,11 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000 NEXT_PUBLIC_SUPABASE_URL=https://examp
 4. When the call ends, Vapi sends a report. We store the transcript, summary, recording link and outcome idempotently.
 
 See [PRD.md](PRD.md), [DEPLOYMENT.md](DEPLOYMENT.md), [docs/TEST_CALLS.md](docs/TEST_CALLS.md), [docs/GTM.md](docs/GTM.md) and [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md).
+
+## Plan upgrades
+Stripe is authoritative for subscription status. Checkout returns to the billing page with its Checkout Session ID; the authenticated confirmation endpoint verifies the workspace, customer, completed payment, subscription and configured price before saving the organization plan. The billing UI refreshes from Supabase after that confirmation. Portal returns reconcile the current subscription from Stripe. The signed webhook remains the retryable path for later subscription changes and cancellations; pending payments are not shown as active plans.
+
+`npm test` includes focused coverage for successful confirmation, pending payment, cross-workspace sessions, and database failures in `src/test/billing-confirm.test.ts`.
+
+## Navigation and brand assets
+The dashboard uses a responsive, keyboard-accessible mobile drawer and a persistent desktop sidebar. Shared UI surfaces use `BrandMark` and `Wordmark`; the square `public/dialdesk-mark.svg` is used for favicon/app-icon metadata, and `public/dialdesk-logo.svg` provides the full logo asset.

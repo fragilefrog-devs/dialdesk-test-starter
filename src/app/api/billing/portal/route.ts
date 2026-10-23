@@ -8,7 +8,7 @@ export async function POST() {
   const { org, role } = await requireOrg()
   if (role === 'member' || !org.stripe_customer_id) return Response.json({ error: 'Not available' }, { status: 403 })
   const session = await stripe().billingPortal.sessions.create({
-    customer: org.stripe_customer_id, return_url: `${appEnv().NEXT_PUBLIC_APP_URL}/dashboard/billing`,
+    customer: org.stripe_customer_id, return_url: `${appEnv().NEXT_PUBLIC_APP_URL}/dashboard/billing?status=refresh`,
   })
   return Response.json({ url: session.url })
 }

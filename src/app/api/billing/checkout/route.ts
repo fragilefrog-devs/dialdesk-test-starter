@@ -31,9 +31,10 @@ export async function POST(req: Request) {
     mode: 'subscription', customer,
     line_items: [{ price: priceIdFor(plan), quantity: 1 }],
     allow_promotion_codes: true,
+    metadata: { org_id: org.id, plan },
     subscription_data: { metadata: { org_id: org.id } },
     client_reference_id: org.id,
-    success_url: `${appEnv().NEXT_PUBLIC_APP_URL}/dashboard/billing?status=success`,
+    success_url: `${appEnv().NEXT_PUBLIC_APP_URL}/dashboard/billing?status=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appEnv().NEXT_PUBLIC_APP_URL}/dashboard/billing`,
   })
   return Response.json({ url: session.url })
