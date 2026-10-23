@@ -1,0 +1,31 @@
+import { readFileSync } from 'node:fs'
+import { describe, expect, it } from 'vitest'
+
+const read = (p: string) => readFileSync(new URL(`../../${p}`, import.meta.url), 'utf8')
+const schema = read('supabase/schema.sql')
+const migration = read('supabase/migrations/20261023_trades_vapi.sql')
+
+describe('trades schema', () => {
+  it('replaces the one-job-at-a-time overlap constraint with capacity booking', () => {
+    expect(schema).not.toContain('add constraint appointments_no_overlap')
+    expect(migration).toContain('drop constraint if exists appointments_no_overlap')
+    for (const sql of [schema, migration]) {
+      expect(sql).toContain('create or replace function public.book_trade_job(')
+      expect(sql).toContain('pg_advisory_xact_lock')
+    }
+  })
+  it('keeps booking and finalization service-role only', () => {
+    expect(schema).toMatch(/revoke all on function public\.book_trade_job[\s\S]*from public, anon, authenticated/)
+    expect(schema).toMatch(/grant execute on function public\.book_trade_job[\s\S]*to service_role/)
+  })
+  it('adds the trades and Vapi columns in both the schema and the migration', () => {
+    for (const col of ['vapi_assistant_id', 'service_zips', 'oncall_number', 'arrival_windows', 'jobs_per_window', 'emergency_service', 'recording_url', 'outcome']) {
+      expect(schema).toContain(col)
+      expect(migration).toContain(col)
+    }
+  })
+  it('creates organizations with the trades defaults', () => {
+    expect(schema).toContain('public.default_services(')
+    expect(schema).toContain("provider text not null default 'vapi'")
+  })
+})

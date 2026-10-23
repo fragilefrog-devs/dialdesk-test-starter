@@ -6,9 +6,9 @@ import { canTakeCalls } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 const NAV = [
-  ['/dashboard', 'Overview'], ['/dashboard/calls', 'Calls'], ['/dashboard/leads', 'Leads'], ['/dashboard/appointments', 'Appointments'],
+  ['/dashboard', 'Overview'], ['/dashboard/calls', 'Calls'], ['/dashboard/leads', 'Leads'], ['/dashboard/appointments', 'Jobs'],
   ['/dashboard/agent', 'Receptionist'], ['/dashboard/knowledge', 'Knowledge'], ['/dashboard/numbers', 'Phone numbers'],
-  ['/dashboard/install', 'Website widget'], ['/dashboard/team', 'Team'], ['/dashboard/billing', 'Billing'],
+  ['/dashboard/team', 'Team'], ['/dashboard/billing', 'Billing'],
 ]
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="min-h-screen md:flex">
       <aside className="border-b border-brand-200/70 bg-white md:min-h-screen md:w-60 md:shrink-0 md:border-b-0 md:border-r">
         <div className="flex items-center justify-between px-4 py-4 md:block">
-          <Link href="/dashboard" className="font-bold text-brand-900">☎ {org.name}</Link>
+          <Link href="/dashboard" className="font-bold text-brand-900">{org.name}</Link>
           <p className="hidden text-xs text-brand-800/60 md:block">{user.email}</p>
         </div>
         <nav aria-label="Dashboard" className="flex gap-1 overflow-x-auto px-3 pb-3 md:block md:space-y-1">
@@ -35,7 +35,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         )}
         {!live && (
           <div role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-800">
-            Your receptionist is <b>paused</b> — callers hear an unavailable message. <Link href="/dashboard/billing" className="font-semibold underline">Fix billing</Link>
+            Your receptionist is <b>paused</b>. New calls are not being answered. <Link href="/dashboard/billing" className="font-semibold underline">Fix billing</Link>
           </div>
         )}
         {children}

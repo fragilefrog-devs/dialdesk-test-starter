@@ -5,12 +5,12 @@ const url = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 export const metadata: Metadata = {
   metadataBase: new URL(url),
-  title: { default: 'AI Voice Receptionist — never miss a call again', template: '%s · AI Voice Receptionist' },
-  description: 'An AI receptionist that answers every call, books appointments and captures leads 24/7. Live in 10 minutes — no hardware, no contracts.',
-  openGraph: { type: 'website', title: 'AI Voice Receptionist', description: 'Answer every call, book appointments, capture leads — 24/7.', url },
+  title: { default: 'DialDesk: AI phone receptionist for plumbers and HVAC companies', template: '%s | DialDesk' },
+  description: 'Answers every call while you are on the job, flags emergencies to your on-call tech, and books repairs into arrival windows.',
+  openGraph: { type: 'website', title: 'DialDesk', description: 'Every call answered, every emergency flagged, every job booked.', url },
   robots: { index: true, follow: true },
 }
-export const viewport: Viewport = { themeColor: '#0d7377', width: 'device-width', initialScale: 1 }
+export const viewport: Viewport = { themeColor: '#0b1c2b', width: 'device-width', initialScale: 1 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -1,4 +1,4 @@
--- Multi-tenant AI Voice Receptionist — schema (idempotent where practical)
+-- DialDesk — multi-tenant AI voice receptionist for plumbing & HVAC — schema (idempotent where practical)
 -- Apply in Supabase SQL editor or via `supabase db push`.
 create extension if not exists pgcrypto;
 
@@ -59,7 +59,17 @@ create table if not exists public.agents (
   transfer_number text,
   record_consent_notice boolean not null default true,
   is_active boolean not null default true,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- Vapi + trades configuration
+  vapi_assistant_id text unique,
+  services text[] not null default '{}',
+  service_zips text[] not null default '{}',
+  oncall_number text,
+  notify_phone text,
+  notify_email text,
+  arrival_windows jsonb not null default '[["08:00","12:00"],["12:00","16:00"]]',
+  jobs_per_window integer not null default 2 check (jobs_per_window between 1 and 50),
+  emergency_service boolean not null default true
 );
 create index if not exists agents_org_idx on public.agents(org_id);
 
@@ -68,7 +78,7 @@ create table if not exists public.phone_numbers (
   org_id uuid not null references public.organizations(id) on delete cascade,
   agent_id uuid references public.agents(id) on delete set null,
   e164 text not null unique,
-  provider text not null default 'twilio',
+  provider text not null default 'vapi',
   provider_sid text,
   status text not null default 'active',
   created_at timestamptz not null default now()
@@ -116,7 +126,10 @@ create table if not exists public.calls (
   created_at timestamptz not null default now(),
   finalized_at timestamp with time zone,
   finalize_attempts integer not null default 0,
-  end_reason text
+  end_reason text,
+  outcome text check (outcome in ('booked','emergency_escalated','lead_captured','info_only','spam','abandoned')),
+  urgency text check (urgency in ('emergency','same_day','routine')),
+  recording_url text
 );
 create index if not exists calls_org_started_idx on public.calls(org_id, started_at desc);
 
@@ -128,6 +141,10 @@ create table if not exists public.leads (
   status text not null default 'new' check (status in ('new','contacted','qualified','won','lost')),
   intent text,
   summary text,
+  urgency text check (urgency in ('emergency','same_day','routine')),
+  address text,
+  zip text,
+  issue text,
   created_at timestamptz not null default now()
 );
 create index if not exists leads_org_idx on public.leads(org_id, created_at desc);
@@ -142,15 +159,16 @@ create table if not exists public.appointments (
   ends_at timestamptz not null,
   status text not null default 'booked' check (status in ('booked','cancelled','completed','no_show')),
   notes text,
+  address text,
+  zip text,
+  issue text,
+  urgency text check (urgency in ('emergency','same_day','routine')),
   created_at timestamptz not null default now(),
   check (ends_at > starts_at)
 );
 create index if not exists appointments_org_start_idx on public.appointments(org_id, starts_at);
--- Hard guarantee against double-booking within a tenant
-create extension if not exists btree_gist;
-alter table public.appointments drop constraint if exists appointments_no_overlap;
-alter table public.appointments add constraint appointments_no_overlap
-  exclude using gist (org_id with =, tstzrange(starts_at, ends_at) with &&) where (status = 'booked');
+-- Capacity per arrival window is enforced by public.book_trade_job() (see below).
+create index if not exists appointments_org_window_idx on public.appointments(org_id, starts_at) where status = 'booked';
 
 -- ── Billing / ops ───────────────────────────────────────────────
 create table if not exists public.stripe_events (
@@ -258,25 +276,6 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- Atomic tenant creation: org + owner membership + default agent
-create or replace function public.create_organization(p_name text, p_slug text, p_industry text, p_timezone text)
-returns uuid language plpgsql security definer set search_path = public as $$
-declare v_org uuid;
-begin
-  if auth.uid() is null then raise exception 'not authenticated'; end if;
-  insert into organizations (name, slug, industry, timezone)
-  values (p_name, lower(p_slug), coalesce(p_industry,'other'), coalesce(p_timezone,'UTC'))
-  returning id into v_org;
-  insert into memberships (org_id, user_id, role) values (v_org, auth.uid(), 'owner');
-  insert into agents (org_id, name, greeting, instructions)
-  values (v_org, p_name || ' Receptionist',
-          'Thank you for calling ' || p_name || '. How can I help you today?',
-          'You are the friendly receptionist for ' || p_name || '. Be concise, warm and accurate. Never invent prices, availability or policies — use the knowledge and tools provided.');
-  return v_org;
-end $$;
-revoke all on function public.create_organization(text,text,text,text) from public, anon;
-grant execute on function public.create_organization(text,text,text,text) to authenticated;
-
 -- Knowledge lookup used by the voice agent (service role)
 create or replace function public.search_knowledge(p_org uuid, p_query text, p_limit int default 3)
 returns table (title text, content text) language sql stable as $$
@@ -331,4 +330,63 @@ $$;
 revoke all on function public.finalize_call(uuid, uuid, jsonb, integer, text)
   from public, anon, authenticated;
 grant execute on function public.finalize_call(uuid, uuid, jsonb, integer, text)
+  to service_role;
+
+-- ── Trades: default services by trade ──────────────────────────
+create or replace function public.default_services(p_industry text) returns text[]
+language sql immutable as $$
+  select case p_industry
+    when 'plumbing' then array['Leak repair','Drain cleaning','Water heater repair or replacement','Toilet and fixture repair','Burst pipe emergency']
+    when 'hvac' then array['AC repair','Furnace repair','New system estimate','Maintenance tune-up','No heat or no cooling emergency']
+    when 'plumbing_hvac' then array['Leak repair','Drain cleaning','Water heater repair or replacement','AC repair','Furnace repair','New system estimate','Maintenance tune-up','Burst pipe emergency','No heat or no cooling emergency']
+    else array[]::text[]
+  end
+$$;
+
+-- Atomic tenant creation: org + owner membership + default trades receptionist
+create or replace function public.create_organization(p_name text, p_slug text, p_industry text, p_timezone text)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare v_org uuid;
+begin
+  if auth.uid() is null then raise exception 'not authenticated'; end if;
+  insert into organizations (name, slug, industry, timezone)
+  values (p_name, lower(p_slug), coalesce(p_industry,'other'), coalesce(p_timezone,'UTC'))
+  returning id into v_org;
+  insert into memberships (org_id, user_id, role) values (v_org, auth.uid(), 'owner');
+  insert into agents (org_id, name, greeting, instructions, services, business_hours)
+  values (v_org, p_name || ' Receptionist',
+          'Thanks for calling ' || p_name || '. I''m the virtual assistant. How can I help?',
+          'You answer the phone for ' || p_name || ', a local home-service company. Be calm, brief and practical. Collect job details; never diagnose problems, quote prices or promise arrival times.',
+          public.default_services(coalesce(p_industry,'other')),
+          '{"mon":["07:30","17:00"],"tue":["07:30","17:00"],"wed":["07:30","17:00"],"thu":["07:30","17:00"],"fri":["07:30","17:00"],"sat":["08:00","13:00"]}'::jsonb);
+  return v_org;
+end $$;
+revoke all on function public.create_organization(text,text,text,text) from public, anon;
+grant execute on function public.create_organization(text,text,text,text) to authenticated;
+
+-- Capacity-aware booking: several techs can take the same arrival window.
+-- The advisory lock serializes bookings for one org + window, so the count-then-insert is race-free.
+create or replace function public.book_trade_job(
+  p_org uuid, p_call uuid, p_contact uuid, p_service text,
+  p_starts timestamptz, p_ends timestamptz, p_capacity integer,
+  p_address text, p_zip text, p_issue text, p_urgency text, p_notes text
+) returns table (out_id uuid, out_status text)
+language plpgsql security definer set search_path = public as $$
+declare v_count integer; v_id uuid;
+begin
+  perform pg_advisory_xact_lock(hashtextextended(p_org::text || p_starts::text, 0));
+  select count(*) into v_count from appointments a
+   where a.org_id = p_org and a.status = 'booked' and a.starts_at = p_starts and a.ends_at = p_ends;
+  if v_count >= greatest(p_capacity, 1) then
+    return query select null::uuid, 'full'::text;
+    return;
+  end if;
+  insert into appointments (org_id, contact_id, call_id, service, starts_at, ends_at, address, zip, issue, urgency, notes)
+  values (p_org, p_contact, p_call, p_service, p_starts, p_ends, p_address, p_zip, p_issue, p_urgency, p_notes)
+  returning id into v_id;
+  return query select v_id, 'booked'::text;
+end $$;
+revoke all on function public.book_trade_job(uuid,uuid,uuid,text,timestamptz,timestamptz,integer,text,text,text,text,text)
+  from public, anon, authenticated;
+grant execute on function public.book_trade_job(uuid,uuid,uuid,text,timestamptz,timestamptz,integer,text,text,text,text,text)
   to service_role;

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { requireOrg } from '@/lib/auth'
 import { limitsFor } from '@/lib/plans'
-import { Badge, Card, PageHeader, Stat, fmtDate, fmtDur } from '@/components/ui'
+import { Card, OutcomeBadge, PageHeader, Stat, UrgencyBadge, fmtDate, fmtDur } from '@/components/ui'
 export const metadata: Metadata = { title: 'Overview' }
 
 export default async function Overview({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
@@ -11,31 +11,32 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const monthStart = new Date(); monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0)
   const since30 = new Date(Date.now() - 30 * 86400000).toISOString()
 
-  const [usage, leads, appts, calls, docs, nums, agent] = await Promise.all([
+  const [usage, emergencies, booked, calls, nums, agent, anyCall] = await Promise.all([
     supabase.from('org_usage_monthly').select('calls, minutes').eq('org_id', org.id).eq('month', monthStart.toISOString()).maybeSingle(),
-    supabase.from('leads').select('id', { count: 'exact', head: true }).eq('org_id', org.id).gte('created_at', since30),
+    supabase.from('calls').select('id', { count: 'exact', head: true }).eq('org_id', org.id).eq('urgency', 'emergency').gte('started_at', since30),
     supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('org_id', org.id).eq('status', 'booked').gte('starts_at', new Date().toISOString()),
-    supabase.from('calls').select('id, from_number, channel, status, duration_seconds, summary, started_at').eq('org_id', org.id).order('started_at', { ascending: false }).limit(6),
-    supabase.from('knowledge_docs').select('id', { count: 'exact', head: true }).eq('org_id', org.id),
+    supabase.from('calls').select('id, from_number, status, outcome, urgency, duration_seconds, summary, started_at').eq('org_id', org.id).order('started_at', { ascending: false }).limit(6),
     supabase.from('phone_numbers').select('id', { count: 'exact', head: true }).eq('org_id', org.id),
-    supabase.from('agents').select('instructions, transfer_number').eq('org_id', org.id).limit(1).maybeSingle(),
+    supabase.from('agents').select('service_zips, notify_phone, notify_email, transfer_number').eq('org_id', org.id).limit(1).maybeSingle(),
+    supabase.from('calls').select('id', { count: 'exact', head: true }).eq('org_id', org.id),
   ])
   const limit = limitsFor(org.plan).minutes
   const used = usage.data?.minutes ?? 0
+  const a = agent.data
   const steps = [
-    ['Teach it your business', (docs.count ?? 0) > 0, '/dashboard/knowledge'],
-    ['Customize your receptionist', !!agent.data?.instructions || !!agent.data?.transfer_number, '/dashboard/agent'],
+    ['Set your service area and arrival windows', (a?.service_zips?.length ?? 0) > 0, '/dashboard/agent'],
+    ['Add where emergency and job alerts go', !!(a?.notify_phone || a?.notify_email || a?.transfer_number), '/dashboard/agent'],
     ['Get a phone number', (nums.count ?? 0) > 0, '/dashboard/numbers'],
-    ['Add the widget to your website', false, '/dashboard/install'],
+    ['Place a test call, then forward your line', (anyCall.count ?? 0) > 0, '/dashboard/numbers'],
   ] as const
   const doneCount = steps.filter((s) => s[1]).length
 
   return (
     <>
-      <PageHeader title={welcome ? `Welcome, ${org.name}` : 'Overview'} sub="How your receptionist is doing this month." />
-      {doneCount < 3 && (
+      <PageHeader title={welcome ? `Welcome, ${org.name}` : 'Overview'} sub="What your receptionist did this month." />
+      {doneCount < steps.length && (
         <Card className="mb-6">
-          <p className="font-semibold text-brand-950">Get live in 4 steps <span className="font-normal text-brand-800/60">({doneCount}/4 done)</span></p>
+          <p className="font-semibold text-brand-950">Get live <span className="font-normal text-brand-800/60">({doneCount} of {steps.length} done)</span></p>
           <ul className="mt-3 grid gap-2 sm:grid-cols-2">
             {steps.map(([t, done, href]) => (
               <li key={t}><Link href={href} className="flex items-center gap-2 rounded-lg border border-brand-200 px-3 py-2 text-sm hover:bg-brand-50">
@@ -47,16 +48,16 @@ export default async function Overview({ searchParams }: { searchParams: Promise
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Calls this month" value={usage.data?.calls ?? 0} />
         <Stat label="Minutes used" value={`${used}/${limit}`} hint={used > limit ? 'Overage billing applies' : `${Math.max(0, limit - used)} left`} />
-        <Stat label="New leads (30d)" value={leads.count ?? 0} />
-        <Stat label="Upcoming appointments" value={appts.count ?? 0} />
+        <Stat label="Emergencies (30 days)" value={emergencies.count ?? 0} />
+        <Stat label="Upcoming jobs" value={booked.count ?? 0} />
       </div>
-      <h2 className="mb-3 mt-8 text-lg font-semibold text-brand-950">Recent calls</h2>
+      <h2 className="mb-3 mt-8 font-display text-xl font-semibold text-brand-950">Recent calls</h2>
       <Card className="divide-y divide-brand-100 !p-0">
-        {(calls.data ?? []).length === 0 && <p className="p-5 text-sm text-brand-800/70">No calls yet. Try the website widget demo or call your number.</p>}
+        {(calls.data ?? []).length === 0 && <p className="p-5 text-sm text-brand-800/70">No calls yet. Call your number to hear how it sounds.</p>}
         {(calls.data ?? []).map((c) => (
           <Link key={c.id} href="/dashboard/calls" className="flex items-start justify-between gap-4 p-4 hover:bg-brand-50/60">
-            <div className="min-w-0"><p className="text-sm font-medium text-brand-950">{c.from_number ?? 'Website visitor'}</p><p className="truncate text-sm text-brand-800/70">{c.summary ?? '—'}</p></div>
-            <div className="shrink-0 text-right text-xs text-brand-800/60"><p>{fmtDate(c.started_at, org.timezone)}</p><p><Badge>{c.channel}</Badge> {fmtDur(c.duration_seconds)}</p></div>
+            <div className="min-w-0"><p className="text-sm font-medium text-brand-950">{c.from_number ?? 'Unknown caller'}</p><p className="truncate text-sm text-brand-800/70">{c.summary ?? 'Summary appears when the call ends.'}</p></div>
+            <div className="shrink-0 space-y-1 text-right text-xs text-brand-800/60"><p>{fmtDate(c.started_at, org.timezone)} · {fmtDur(c.duration_seconds)}</p><p className="flex justify-end gap-1"><UrgencyBadge urgency={c.urgency} /><OutcomeBadge outcome={c.outcome} /></p></div>
           </Link>
         ))}
       </Card>

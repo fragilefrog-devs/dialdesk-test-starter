@@ -5,7 +5,9 @@ import { z } from 'zod'
 import { requireOrg } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { limitsFor } from '@/lib/plans'
-import { buyNumber, releaseNumber } from '@/lib/twilio'
+import { createNumber, deleteNumber, getNumber } from '@/lib/vapi'
+import { syncAgent } from '@/lib/vapi-sync'
+import { cleanWindows, parseList, TIME_RE } from '@/lib/trades'
 import { sendEmail, escapeHtml } from '@/lib/email'
 import { DAY_KEYS } from '@/lib/time'
 
@@ -17,29 +19,47 @@ async function adminCtx() {
 const go = (path: string, key: 'error' | 'ok', msg: string): never => redirect(`${path}?${key}=${encodeURIComponent(msg)}`)
 
 // ── Agent ──
+const e164 = z.string().regex(/^\+[1-9][0-9]{7,14}$/, 'Use international format, like +15551234567')
 const agentSchema = z.object({
   name: z.string().trim().min(1).max(60),
   greeting: z.string().trim().min(5).max(300),
   language: z.string().regex(/^[a-z]{2}(-[A-Z]{2})?$/),
+  voice: z.enum(['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']),
   instructions: z.string().max(4000),
-  transfer_number: z.string().regex(/^\+?[0-9]{7,15}$/).or(z.literal('')),
-  appointment_minutes: z.coerce.number().int().min(5).max(480),
+  transfer_number: e164.or(z.literal('')),
+  oncall_number: e164.or(z.literal('')),
+  notify_phone: e164.or(z.literal('')),
+  notify_email: z.string().email().max(200).or(z.literal('')),
+  jobs_per_window: z.coerce.number().int().min(1).max(50),
 })
 export async function saveAgent(fd: FormData) {
   const { supabase, org } = await adminCtx()
   const p = agentSchema.safeParse(Object.fromEntries(fd))
-  if (!p.success) return go('/dashboard/agent', 'error', 'Check the highlighted fields: ' + p.error.issues.map((i) => i.path.join('.')).join(', '))
+  if (!p.success) return go('/dashboard/agent', 'error', p.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(' · '))
   const hours: Record<string, [string, string]> = {}
   for (const d of DAY_KEYS) {
     const o = String(fd.get(`${d}_open`) ?? ''), c = String(fd.get(`${d}_close`) ?? '')
-    if (/^\d{2}:\d{2}$/.test(o) && /^\d{2}:\d{2}$/.test(c) && o < c) hours[d] = [o, c]
+    if (TIME_RE.test(o) && TIME_RE.test(c) && o < c) hours[d] = [o, c]
   }
+  const windows = cleanWindows([0, 1, 2, 3].map((i) => [String(fd.get(`w${i}_start`) ?? ''), String(fd.get(`w${i}_end`) ?? '')]))
+  if (!windows.length) return go('/dashboard/agent', 'error', 'Add at least one arrival window (start before end).')
+  const id = String(fd.get('id'))
+  const nullable = (v: string) => v || null
   const { error } = await supabase.from('agents').update({
-    ...p.data!, transfer_number: p.data!.transfer_number || null, business_hours: hours, is_active: fd.get('is_active') === 'on',
-  }).eq('org_id', org.id).eq('id', String(fd.get('id')))
+    name: p.data.name, greeting: p.data.greeting, language: p.data.language, voice: p.data.voice, instructions: p.data.instructions,
+    transfer_number: nullable(p.data.transfer_number), oncall_number: nullable(p.data.oncall_number),
+    notify_phone: nullable(p.data.notify_phone), notify_email: nullable(p.data.notify_email),
+    jobs_per_window: p.data.jobs_per_window, arrival_windows: windows, business_hours: hours,
+    services: parseList(String(fd.get('services') ?? ''), 30), service_zips: parseList(String(fd.get('service_zips') ?? ''), 300, 12),
+    emergency_service: fd.get('emergency_service') === 'on', record_consent_notice: fd.get('record_consent_notice') === 'on',
+    is_active: fd.get('is_active') === 'on',
+  }).eq('org_id', org.id).eq('id', id)
   if (error) return go('/dashboard/agent', 'error', 'Could not save.')
   revalidatePath('/dashboard/agent')
-  return go('/dashboard/agent', 'ok', 'Saved. New calls use these settings immediately.')
+  const sync = await syncAgent(id)
+  return sync.ok
+    ? go('/dashboard/agent', 'ok', 'Saved. New calls use these settings.')
+    : go('/dashboard/agent', 'error', sync.error)
 }
 
 // ── Knowledge ──
@@ -61,22 +81,32 @@ export async function deleteDoc(fd: FormData) {
 // ── Numbers ──
 export async function purchaseNumber(fd: FormData) {
   const { supabase, org } = await adminCtx()
-  const e164 = String(fd.get('e164') ?? '')
-  if (!/^\+[1-9][0-9]{7,14}$/.test(e164)) return go('/dashboard/numbers', 'error', 'Invalid number.')
+  const area = String(fd.get('area') ?? '').trim()
+  if (!/^[2-9][0-9]{2}$/.test(area)) return go('/dashboard/numbers', 'error', 'Enter a 3-digit US area code, like 312.')
   const { data: owned } = await supabase.from('phone_numbers').select('id').eq('org_id', org.id)
-  if ((owned?.length ?? 0) >= limitsFor(org.plan).numbers) return go('/dashboard/numbers', 'error', 'Number limit reached — upgrade your plan for more.')
-  const { data: agent } = await supabase.from('agents').select('id').eq('org_id', org.id).order('created_at').limit(1).maybeSingle()
-  let bought
-  try { bought = await buyNumber(e164) } catch (e) { console.error(e); return go('/dashboard/numbers', 'error', 'That number is no longer available.') }
-  const { error } = await supabaseAdmin().from('phone_numbers').insert({ org_id: org.id, agent_id: agent?.id ?? null, e164: bought.phone_number, provider_sid: bought.sid })
-  if (error) { await releaseNumber(bought.sid); return go('/dashboard/numbers', 'error', 'Could not attach number.') }
-  return go('/dashboard/numbers', 'ok', `${bought.phone_number} is live.`)
+  if ((owned?.length ?? 0) >= limitsFor(org.plan).numbers) return go('/dashboard/numbers', 'error', 'Number limit reached. Upgrade your plan for more.')
+  const { data: agent } = await supabase.from('agents').select('id, vapi_assistant_id').eq('org_id', org.id).order('created_at').limit(1).maybeSingle()
+  if (!agent) return go('/dashboard/numbers', 'error', 'Set up your receptionist first.')
+  let assistantId = agent.vapi_assistant_id as string | null
+  if (!assistantId) {
+    const sync = await syncAgent(agent.id)
+    if (!sync.ok) return go('/dashboard/numbers', 'error', sync.error)
+    assistantId = (await supabaseAdmin().from('agents').select('vapi_assistant_id').eq('id', agent.id).single()).data?.vapi_assistant_id ?? null
+  }
+  if (!assistantId) return go('/dashboard/numbers', 'error', 'Could not prepare the receptionist. Try again.')
+  let created: { id: string; number?: string }
+  try { created = await createNumber(area, assistantId, org.name) } catch (e) { console.error(e); return go('/dashboard/numbers', 'error', 'No number available for that area code. Try a nearby one.') }
+  const number = created.number ?? (await getNumber(created.id).catch(() => null))?.number
+  if (!number) { await deleteNumber(created.id); return go('/dashboard/numbers', 'error', 'That number was not ready. Try another area code.') }
+  const { error } = await supabaseAdmin().from('phone_numbers').insert({ org_id: org.id, agent_id: agent.id, e164: number, provider: 'vapi', provider_sid: created.id })
+  if (error) { await deleteNumber(created.id); return go('/dashboard/numbers', 'error', 'Could not attach the number.') }
+  return go('/dashboard/numbers', 'ok', `${number} is live.`)
 }
 export async function removeNumber(fd: FormData) {
   const { supabase, org } = await adminCtx()
   const { data: n } = await supabase.from('phone_numbers').select('id, provider_sid').eq('org_id', org.id).eq('id', String(fd.get('id'))).maybeSingle()
   if (!n) return
-  if (n.provider_sid) await releaseNumber(n.provider_sid)
+  if (n.provider_sid) await deleteNumber(n.provider_sid)
   await supabase.from('phone_numbers').delete().eq('id', n.id).eq('org_id', org.id)
   revalidatePath('/dashboard/numbers')
 }
@@ -91,7 +121,7 @@ export async function inviteMember(fd: FormData) {
   const { data: inv, error } = await supabase.from('invites').insert({ org_id: org.id, ...p.data! }).select('token').single()
   if (error || !inv) return go('/dashboard/team', 'error', 'Could not create invite.')
   const link = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${inv.token}`
-  await sendEmail(p.data!.email, `${org.name} invited you to Receptionist AI`,
+  await sendEmail(p.data!.email, `${org.name} invited you to DialDesk`,
     `<p>${escapeHtml(user.email ?? 'A teammate')} invited you to join <b>${escapeHtml(org.name)}</b>.</p><p><a href="${link}">Accept invitation</a> (expires in 7 days)</p>`)
   return go('/dashboard/team', 'ok', 'Invitation sent.')
 }
