@@ -7,6 +7,8 @@ export const metadata: Metadata = { title: 'Appointments' }
 export default async function Appointments() {
   const { supabase, org } = await requireOrg()
   const { data: rows } = await supabase.from('appointments').select('id, service, starts_at, ends_at, status, notes, address, zip, issue, urgency, contacts(name, phone)')
+    // server component: runs once per request, so reading the clock here is correct
+    // eslint-disable-next-line react-hooks/purity
     .eq('org_id', org.id).gte('starts_at', new Date(Date.now() - 86400000).toISOString()).order('starts_at').limit(200)
   return (
     <>
