@@ -36,11 +36,11 @@ export default async function Overview({ searchParams }: { searchParams: Promise
       <PageHeader title={welcome ? `Welcome, ${org.name}` : 'Overview'} sub="What your receptionist did this month." />
       {doneCount < steps.length && (
         <Card className="mb-6">
-          <p className="font-semibold text-brand-950">Get live <span className="font-normal text-brand-800/60">({doneCount} of {steps.length} done)</span></p>
+          <p className="font-semibold text-ink">Get live <span className="font-normal text-faint">({doneCount} of {steps.length} done)</span></p>
           <ul className="mt-3 grid gap-2 sm:grid-cols-2">
             {steps.map(([t, done, href]) => (
-              <li key={t}><Link href={href} className="flex items-center gap-2 rounded-lg border border-brand-200 px-3 py-2 text-sm hover:bg-brand-50">
-                <span aria-hidden className={`grid h-5 w-5 place-items-center rounded-full text-xs ${done ? 'bg-accent-500 text-white' : 'border border-brand-300'}`}>{done ? '✓' : ''}</span>{t}</Link></li>
+              <li key={t}><Link href={href} className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm hover:bg-surface-2">
+                <span aria-hidden className={`grid h-5 w-5 place-items-center rounded-full text-xs ${done ? 'bg-good text-primary-fg' : 'border border-control'}`}>{done ? '✓' : ''}</span>{t}</Link></li>
             ))}
           </ul>
         </Card>
@@ -51,13 +51,13 @@ export default async function Overview({ searchParams }: { searchParams: Promise
         <Stat label="Emergencies (30 days)" value={emergencies.count ?? 0} />
         <Stat label="Upcoming jobs" value={booked.count ?? 0} />
       </div>
-      <h2 className="mb-3 mt-8 font-display text-xl font-semibold text-brand-950">Recent calls</h2>
-      <Card className="divide-y divide-brand-100 !p-0">
-        {(calls.data ?? []).length === 0 && <p className="p-5 text-sm text-brand-800/70">No calls yet. Call your number to hear how it sounds.</p>}
+      <h2 className="mb-3 mt-8 font-display text-xl font-semibold text-ink">Recent calls</h2>
+      <Card className="divide-y divide-line !p-0">
+        {(calls.data ?? []).length === 0 && <p className="p-5 text-sm text-muted">No calls yet. Call your number to hear how it sounds.</p>}
         {(calls.data ?? []).map((c) => (
-          <Link key={c.id} href="/dashboard/calls" className="flex items-start justify-between gap-4 p-4 hover:bg-brand-50/60">
-            <div className="min-w-0"><p className="text-sm font-medium text-brand-950">{c.from_number ?? 'Unknown caller'}</p><p className="truncate text-sm text-brand-800/70">{c.summary ?? 'Summary appears when the call ends.'}</p></div>
-            <div className="shrink-0 space-y-1 text-right text-xs text-brand-800/60"><p>{fmtDate(c.started_at, org.timezone)} · {fmtDur(c.duration_seconds)}</p><p className="flex justify-end gap-1"><UrgencyBadge urgency={c.urgency} /><OutcomeBadge outcome={c.outcome} /></p></div>
+          <Link key={c.id} href="/dashboard/calls" className="flex items-start justify-between gap-4 p-4 hover:bg-surface-2">
+            <div className="min-w-0"><p className="text-sm font-medium text-ink">{c.from_number ?? 'Unknown caller'}</p><p className="truncate text-sm text-muted">{c.summary ?? 'Summary appears when the call ends.'}</p></div>
+            <div className="shrink-0 space-y-1 text-right text-xs text-faint"><p>{fmtDate(c.started_at, org.timezone)} · {fmtDur(c.duration_seconds)}</p><p className="flex justify-end gap-1"><UrgencyBadge urgency={c.urgency} /><OutcomeBadge outcome={c.outcome} /></p></div>
           </Link>
         ))}
       </Card>

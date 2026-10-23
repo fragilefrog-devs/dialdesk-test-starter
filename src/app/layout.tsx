@@ -10,12 +10,16 @@ export const metadata: Metadata = {
   openGraph: { type: 'website', title: 'DialDesk', description: 'Every call answered, every emergency flagged, every job booked.', url },
   robots: { index: true, follow: true },
 }
-export const viewport: Viewport = { themeColor: '#0b1c2b', width: 'device-width', initialScale: 1 }
+export const viewport: Viewport = {
+  colorScheme: 'light dark',
+  themeColor: [{ media: '(prefers-color-scheme: light)', color: '#f4f6f5' }, { media: '(prefers-color-scheme: dark)', color: '#0b141b' }],
+  width: 'device-width', initialScale: 1,
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-surface-50 text-brand-950 antialiased">{children}</body>
+      <body className="min-h-screen bg-canvas text-ink antialiased">{children}</body>
     </html>
   )
 }

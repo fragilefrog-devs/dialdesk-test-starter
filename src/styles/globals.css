@@ -1,19 +1,117 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap');
 @import 'tailwindcss';
 @config '../../tailwind.config.ts';
+
+/* ── Design tokens ───────────────────────────────────────────
+   Surfaces: canvas (L0) > surface (L1 panels, lists, sidebar) > surface-2 (hover, wells).
+   60% canvas, 30% surface, 10% accent: primary carries actions and focus, signal only the one marketing CTA,
+   danger only emergencies. Every text pair clears WCAG AA. */
+:root {
+  color-scheme: light dark;
+
+  --canvas: light-dark(#f4f6f5, #0b141b);
+  --surface: light-dark(#ffffff, #111c25);
+  --surface-2: light-dark(#edf1f0, #172531);
+  --line: light-dark(rgb(11 28 43 / 0.1), rgb(255 255 255 / 0.09));
+  --control: light-dark(#7d8d99, #5d7282);          /* 3:1 boundary for inputs and buttons */
+
+  --ink: light-dark(#0b1c2b, #e8eef2);
+  --muted: light-dark(#435766, #a2b4c0);
+  --faint: light-dark(#596d7c, #8497a5);
+
+  --primary: light-dark(#1d5580, #7fb2d6);
+  --primary-hover: light-dark(#164468, #a3c8e2);
+  --primary-fg: light-dark(#ffffff, #0b1c2b);
+  --focus: light-dark(#2f6a93, #7fb2d6);
+
+  --signal: #f5b81c;
+  --signal-hover: #fbd566;
+  --signal-fg: #0b1c2b;
+
+  --danger: light-dark(#a8231c, #ff8f86);
+  --danger-soft: light-dark(#fdeceb, #3a1b1d);
+  --good: light-dark(#0b6b4a, #5fd0a1);
+  --good-soft: light-dark(#e3f5ec, #123227);
+  --warn: light-dark(#8a5a00, #f2c14e);
+  --warn-soft: light-dark(#fdf1d6, #3a2f12);
+  --band: light-dark(#0b1c2b, #172531);
+
+  --shadow: light-dark(rgb(11 28 43 / 0.06), rgb(0 0 0 / 0.4));
+  --edge: light-dark(transparent, rgb(255 255 255 / 0.05));
+
+  /* Motion: four durations, one ease-out for entering, one ease-in for leaving. */
+  --m-100: 100ms;
+  --m-150: 150ms;
+  --m-200: 200ms;
+  --m-300: 300ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+
+  accent-color: var(--primary);
+  scrollbar-color: var(--control) transparent;
+}
 
 @layer base {
   html, body {
     max-width: 100vw;
     overflow-x: hidden;
+    background-color: var(--canvas);
+    color: var(--ink);
     font-family: 'Barlow', system-ui, sans-serif;
-    background-color: #f4f6f5;
-    color: #0b1c2b;
+    font-size: 1rem;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3 { font-family: 'Barlow Condensed', 'Barlow', system-ui, sans-serif; letter-spacing: 0; }
+  h1, h2, h3 { font-family: 'Barlow Condensed', 'Barlow', system-ui, sans-serif; font-weight: 600; line-height: 1.15; }
   a { color: inherit; text-decoration: none; }
-  input, textarea, select { color-scheme: light; }
-  :focus-visible { outline: 2px solid #2f6a93; outline-offset: 2px; }
-  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+  ::selection { background: color-mix(in srgb, var(--primary) 28%, transparent); }
+  summary { list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+}
+
+/* ── Motion ───────────────────────────────────────────────── */
+@keyframes rise { from { opacity: 0; translate: 0 8px; } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes pulse-soft { 50% { opacity: 0.55; } }
+@keyframes spin { to { rotate: 360deg; } }
+
+/* Dashboard page enter (template.tsx remounts per navigation). */
+.page-enter {
+  animation: rise var(--m-200) var(--ease-out) both;
+  @media (prefers-reduced-motion: reduce) { animation: fade var(--m-100) ease both; }
+}
+
+/* One-time staggered entrance for the hero ticket rows: --i is the row index. */
+.rise {
+  animation: rise var(--m-300) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 100ms);
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+/* Scroll reveal: progressive enhancement. Without support, or with reduced motion, content is simply visible. */
+@keyframes reveal { from { opacity: 0; translate: 0 8px; } }
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+}
+
+/* Loading: structural skeletons. Functional pulse only when motion is allowed. */
+.skeleton { background: var(--surface-2); border-radius: 8px; }
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton { animation: pulse-soft 1.6s ease-in-out infinite; }
+}
+.spin { animation: spin 0.8s linear infinite; @media (prefers-reduced-motion: reduce) { animation: none; } }
+
+/* FAQ chevron */
+details > summary .chev { transition: rotate var(--m-150) var(--ease-out); }
+details[open] > summary .chev { rotate: 180deg; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter, .rise, .chev { transition: none; }
 }

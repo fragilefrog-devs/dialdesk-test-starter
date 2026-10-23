@@ -1,3 +1,4 @@
+import { SubmitButton } from '@/components/SubmitButton'
 import type { Metadata } from 'next'
 import { requireOrg } from '@/lib/auth'
 import { saveAgent } from '../actions'
@@ -8,7 +9,7 @@ export const metadata: Metadata = { title: 'Receptionist' }
 const LANGS: [string, string][] = [['en', 'English'], ['es', 'Spanish'], ['fr', 'French'], ['pt', 'Portuguese']]
 const VOICES = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
 const ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
-const hint = 'mt-1 text-xs text-brand-800/60'
+const hint = 'mt-1 text-xs text-faint'
 
 export default async function AgentPage({ searchParams }: { searchParams: Promise<{ error?: string; ok?: string; setup?: string }> }) {
   const { error, ok, setup } = await searchParams
@@ -29,7 +30,7 @@ export default async function AgentPage({ searchParams }: { searchParams: Promis
         <input type="hidden" name="id" value={a.id} />
         <fieldset disabled={ro} className="space-y-5">
           <Card className="space-y-4">
-            <h2 className="font-semibold text-brand-950">Greeting and voice</h2>
+            <h2 className="font-semibold text-ink">Greeting and voice</h2>
             <div className="grid gap-4 sm:grid-cols-3">
               <div><label htmlFor="name" className={label}>Assistant name</label><input id="name" name="name" defaultValue={a.name} required maxLength={60} className={input} /></div>
               <div><label htmlFor="voice" className={label}>Voice</label><select id="voice" name="voice" defaultValue={a.voice} className={input}>{VOICES.map((v) => <option key={v}>{v}</option>)}</select></div>
@@ -40,14 +41,14 @@ export default async function AgentPage({ searchParams }: { searchParams: Promis
           </Card>
 
           <Card className="space-y-4">
-            <h2 className="font-semibold text-brand-950">Services and service area</h2>
+            <h2 className="font-semibold text-ink">Services and service area</h2>
             <div><label htmlFor="services" className={label}>Services you offer</label><textarea id="services" name="services" rows={5} defaultValue={(a.services as string[]).join('\n')} className={input} placeholder={'Drain cleaning\nWater heater replacement\nAC repair'} /><p className={hint}>One per line. The assistant only books jobs that fit this list.</p></div>
             <div><label htmlFor="service_zips" className={label}>Postcodes you serve</label><textarea id="service_zips" name="service_zips" rows={3} defaultValue={(a.service_zips as string[]).join(', ')} className={input} placeholder="60614, 60657, 60618" /><p className={hint}>Separate with commas or new lines. Leave empty to accept every address.</p></div>
           </Card>
 
           <Card>
-            <h2 className="mb-1 font-semibold text-brand-950">Arrival windows</h2>
-            <p className="mb-3 text-sm text-brand-800/70">Callers book a window and a technician arrives inside it ({org.timezone}).</p>
+            <h2 className="mb-1 font-semibold text-ink">Arrival windows</h2>
+            <p className="mb-3 text-sm text-muted">Callers book a window and a technician arrives inside it ({org.timezone}).</p>
             <div className="space-y-2">
               {rows.map(([s, e], i) => (
                 <div key={i} className="flex items-center gap-3 text-sm">
@@ -61,7 +62,7 @@ export default async function AgentPage({ searchParams }: { searchParams: Promis
           </Card>
 
           <Card>
-            <h2 className="mb-3 font-semibold text-brand-950">Office hours <span className="font-normal text-brand-800/60">({org.timezone}). Leave blank for closed.</span></h2>
+            <h2 className="mb-3 font-semibold text-ink">Office hours <span className="font-normal text-faint">({org.timezone}). Leave blank for closed.</span></h2>
             <div className="space-y-2">
               {ORDER.map((d) => (
                 <div key={d} className="flex items-center gap-3 text-sm">
@@ -76,7 +77,7 @@ export default async function AgentPage({ searchParams }: { searchParams: Promis
           </Card>
 
           <Card className="space-y-4">
-            <h2 className="font-semibold text-brand-950">Emergencies and alerts</h2>
+            <h2 className="font-semibold text-ink">Emergencies and alerts</h2>
             <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="emergency_service" defaultChecked={a.emergency_service} className="mt-1" /><span>We handle emergencies after hours. Emergency callers are sent to the on-call technician.</span></label>
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="oncall_number" className={label}>On-call technician number</label><input id="oncall_number" name="oncall_number" defaultValue={a.oncall_number ?? ''} placeholder="+15551234567" className={input} /></div>
@@ -88,7 +89,7 @@ export default async function AgentPage({ searchParams }: { searchParams: Promis
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" defaultChecked={a.is_active} /> Receptionist is active and answering calls</label>
           </Card>
         </fieldset>
-        {!ro && <button className={btn.primary}>Save changes</button>}
+        {!ro && <SubmitButton className={btn.primary}>Save changes</SubmitButton>}
       </form>
     </>
   )

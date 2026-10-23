@@ -17,7 +17,7 @@ export function CheckoutButton({ plan, label, primary }: { plan: string; label: 
         onClick={async () => { setBusy(true); setErr(''); try { await go('/api/billing/checkout', { plan }) } catch (e) { setErr((e as Error).message); setBusy(false) } }}>
         {busy ? 'Redirecting…' : label}
       </button>
-      {err && <p role="alert" className="mt-1 text-xs text-red-700">{err}</p>}
+      {err && <p role="alert" className="mt-1 text-xs text-danger">{err}</p>}
     </>
   )
 }

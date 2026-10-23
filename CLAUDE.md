@@ -24,3 +24,12 @@ DialDesk: a multi-tenant AI phone receptionist for plumbing and HVAC companies. 
 1. Read the owning module and a nearby test before editing.
 2. Run `npm run type-check`, `npm run lint`, `npm test`, and `npm run build` (set the three `NEXT_PUBLIC_*` vars).
 3. Vapi payload shapes can change. When touching `vapi-parse.ts`, confirm against current Vapi docs and a real test call.
+
+## UI conventions
+- **Tokens only.** Colors are semantic Tailwind tokens (`bg-canvas`, `bg-surface`, `text-ink`, `text-muted`, `text-faint`, `border-line`, `border-control`, `bg-primary`, `bg-signal`, `text-danger`, `text-good`, `text-warn`) backed by `light-dark()` variables in `src/styles/globals.css`. Do not hard-code hex or reintroduce palette scales; the app follows the system light/dark setting.
+- **Surfaces.** Canvas, then surface (panels, lists, sidebar), then surface-2 (hover, wells). Hairline border first, faint shadow second. Prefer `Panel` (one framed, divided list) over a stack of cards.
+- **Type.** Barlow Condensed headings over Barlow body. Weights 400, 500, 600 only. Sizes 12 (meta only), 14, 16 and the display scale.
+- **Radius.** 8px controls, 12px panels. Controls are at least 44px tall.
+- **Status** is a dot plus a word (`Badge`), never color alone and never a decorative pill.
+- **Motion.** Durations 100, 150, 200, 300ms only. Animate `transform` and `opacity`, ease-out in, ease-in out. No decorative loops. Every animation has a `prefers-reduced-motion` path. Scroll reveals (`.reveal`) are progressive enhancement and must stay visible without support.
+- **States.** Every page needs loading (skeleton mirroring the layout), empty (what belongs here, why, one action), error and long-content cases. Forms use `SubmitButton` for the pending state.

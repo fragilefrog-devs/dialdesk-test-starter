@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ChevronDown } from 'lucide-react'
 import { SiteHeader, SiteFooter, PricingGrid, Wordmark } from '@/components/marketing'
 import { btn } from '@/components/ui'
 
@@ -25,78 +26,85 @@ export default function Home() {
     <>
       <SiteHeader />
       <main>
-        <section className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-16 pt-14 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-24 pt-16 md:px-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <h1 className="font-display text-5xl font-bold leading-[1.02] text-brand-950 sm:text-7xl">Every call answered. Every emergency flagged.</h1>
-            <p className="mt-5 max-w-xl text-lg text-brand-800/85">DialDesk answers your phone while you are under a sink, books the job into an arrival window, and texts you the details. Emergencies reach your on-call tech in seconds.</p>
+            <h1 className="font-display text-5xl font-semibold leading-[1.1] tracking-[-0.01em] text-ink sm:text-7xl">Every call answered. Every emergency flagged.</h1>
+            <p className="mt-5 max-w-xl text-lg text-muted">DialDesk answers your phone while you are under a sink, books the job into an arrival window, and texts you the details. Emergencies reach your on-call tech in seconds.</p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link href="/signup" className={btn.signal}>Start your 14-day free trial</Link>
-              <Link href="#how" className="font-semibold text-brand-700 underline underline-offset-4">See how it works</Link>
+              <Link href="#how" className="font-semibold text-primary underline underline-offset-4">See how it works</Link>
             </div>
-            <p className="mt-3 text-sm text-brand-800/70">No card to start. Works with the number you already have.</p>
+            <p className="mt-3 text-sm text-muted">No card to start. Works with the number you already have.</p>
           </div>
 
-          <aside aria-label="Example text message" className="relative rounded-xl border border-brand-200 bg-white p-5 shadow-elevated before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:rounded-l-xl before:bg-[#b3261e]">
-            <p className="text-sm text-brand-800/70">Text to the owner, 9:42 PM</p>
-            <p className="mt-2 font-display text-2xl font-bold text-[#b3261e]">Emergency: flooding</p>
-            <dl className="mt-3 space-y-2 text-[15px]">
-              <div><dt className="text-brand-800/60">Problem</dt><dd className="font-medium">Water coming through the kitchen ceiling</dd></div>
-              <div><dt className="text-brand-800/60">Address</dt><dd className="font-medium">14 Alder St, 60614</dd></div>
-              <div><dt className="text-brand-800/60">Caller</dt><dd className="font-medium">Maria R., +1 773 555 0142</dd></div>
-              <div><dt className="text-brand-800/60">Status</dt><dd className="font-medium">Transferred to the on-call tech</dd></div>
+          <aside aria-label="Example text message" className="rise relative rounded-xl border border-line bg-surface p-6 shadow-elevated before:absolute before:inset-y-0 before:left-0 before:w-1 before:rounded-l-xl before:bg-danger" style={{ ['--i' as string]: 1 }}>
+            <p className="text-sm text-faint">Text to the owner, 9:42 PM</p>
+            <p className="rise mt-2 font-display text-3xl text-danger" style={{ ['--i' as string]: 2 }}>Emergency: flooding</p>
+            <dl className="mt-4 space-y-3">
+              {[['Problem', 'Water coming through the kitchen ceiling'], ['Address', '14 Alder St, 60614'], ['Caller', 'Maria R., +1 773 555 0142'], ['Status', 'Transferred to the on-call tech']].map(([k, v], i) => (
+                <div key={k} className="rise" style={{ ['--i' as string]: i + 3 }}><dt className="text-sm text-faint">{k}</dt><dd className="font-medium text-ink">{v}</dd></div>
+              ))}
             </dl>
           </aside>
         </section>
 
-        <section className="border-y border-brand-200/70 bg-white py-14">
-          <div className="mx-auto max-w-6xl px-5">
-            <h2 className="font-display text-4xl font-bold text-brand-950">Every call ends one of three ways</h2>
-            <dl className="mt-6 divide-y divide-brand-200/70">
+        <section className="border-y border-line bg-surface py-24">
+          <div className="mx-auto grid max-w-6xl gap-12 px-4 md:px-6 lg:grid-cols-[5fr_7fr]">
+            <div className="reveal">
+              <h2 className="font-display text-4xl leading-[1.15] text-ink sm:text-5xl">Every call ends one of three ways</h2>
+              <p className="mt-4 max-w-md text-muted">It never quotes prices, diagnoses problems or promises an exact arrival time.</p>
+            </div>
+            <dl className="divide-y divide-line border-y border-line">
               {paths.map(([t, d]) => (
-                <div key={t} className="grid gap-1 py-5 md:grid-cols-[14rem_1fr] md:gap-8">
-                  <dt className="font-display text-2xl font-semibold text-brand-900">{t}</dt>
-                  <dd className="max-w-2xl text-brand-800/85">{d}</dd>
+                <div key={t} className="reveal py-6">
+                  <dt className="font-display text-2xl text-ink">{t}</dt>
+                  <dd className="mt-2 max-w-prose text-muted">{d}</dd>
                 </div>
               ))}
             </dl>
-            <p className="mt-6 max-w-2xl font-medium text-brand-900">It never quotes prices, diagnoses problems or promises an exact arrival time.</p>
           </div>
         </section>
 
-        <section id="how" className="mx-auto max-w-6xl px-5 py-16">
-          <h2 className="font-display text-4xl font-bold text-brand-950">Live in an afternoon</h2>
-          <ol className="mt-8 grid gap-8 md:grid-cols-3">
+        <section id="how" className="mx-auto max-w-6xl px-4 py-24 md:px-6">
+          <h2 className="reveal font-display text-4xl leading-[1.15] text-ink sm:text-5xl">Live in an afternoon</h2>
+          <ol className="mt-12 divide-y divide-line border-y border-line">
             {steps.map(([t, d], i) => (
-              <li key={t}>
-                <span className="font-display text-5xl font-bold text-signal-500">{i + 1}</span>
-                <h3 className="mt-1 text-2xl font-semibold text-brand-950">{t}</h3>
-                <p className="mt-1 text-brand-800/85">{d}</p>
+              <li key={t} className="reveal grid gap-4 py-8 md:grid-cols-[6rem_1fr_1.4fr] md:items-baseline md:gap-8">
+                <span className="font-display text-5xl leading-[1.1] tabular-nums text-primary">{i + 1}</span>
+                <h3 className="font-display text-2xl text-ink">{t}</h3>
+                <p className="max-w-prose text-muted">{d}</p>
               </li>
             ))}
           </ol>
         </section>
 
-        <section id="pricing" className="mx-auto max-w-6xl px-5 pb-16">
-          <h2 className="font-display text-4xl font-bold text-brand-950">One saved job pays for the year</h2>
-          <p className="mb-8 mt-2 text-brand-800/80">Flat monthly price with call minutes included. Cancel anytime.</p>
-          <PricingGrid />
-        </section>
-
-        <section className="mx-auto max-w-3xl px-5 pb-20">
-          <h2 className="mb-6 font-display text-4xl font-bold text-brand-950">Questions</h2>
-          <div className="space-y-3">
-            {faqs.map(([q, a]) => (
-              <details key={q} className="rounded-lg border border-brand-200/70 bg-white p-4 shadow-soft">
-                <summary className="cursor-pointer text-lg font-semibold text-brand-950">{q}</summary>
-                <p className="mt-2 text-brand-800/85">{a}</p>
-              </details>
-            ))}
+        <section id="pricing" className="border-t border-line bg-surface py-24">
+          <div className="mx-auto max-w-6xl px-4 md:px-6">
+            <h2 className="reveal font-display text-4xl leading-[1.15] text-ink sm:text-5xl">One saved job pays for the year</h2>
+            <p className="reveal mb-12 mt-4 max-w-prose text-muted">Flat monthly price with call minutes included. Cancel anytime.</p>
+            <PricingGrid />
           </div>
         </section>
 
-        <section className="bg-brand-950 py-14">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6 px-5">
-            <div><Wordmark light /><p className="mt-3 font-display text-4xl font-bold text-white">Stop losing jobs to voicemail.</p></div>
+        <section className="mx-auto max-w-6xl px-4 py-24 md:px-6">
+          <div className="grid gap-12 lg:grid-cols-[5fr_7fr]">
+            <h2 className="reveal font-display text-4xl leading-[1.15] text-ink sm:text-5xl">Questions</h2>
+            <div className="divide-y divide-line border-y border-line">
+              {faqs.map(([q, a]) => (
+                <details key={q} className="group">
+                  <summary className="flex min-h-14 cursor-pointer items-center justify-between gap-4 py-4 text-lg font-medium text-ink transition hover:text-primary">
+                    {q}<ChevronDown className="chev h-5 w-5 shrink-0 text-faint" aria-hidden />
+                  </summary>
+                  <p className="max-w-prose pb-6 text-muted">{a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-band py-16">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-8 px-4 md:px-6">
+            <div><Wordmark light /><p className="mt-4 font-display text-4xl leading-[1.15] text-[#e8eef2] sm:text-5xl">Stop losing jobs to voicemail.</p></div>
             <Link href="/signup" className={btn.signal}>Start your free trial</Link>
           </div>
         </section>

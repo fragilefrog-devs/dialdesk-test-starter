@@ -11,17 +11,17 @@ export default async function Appointments() {
   return (
     <>
       <PageHeader title="Jobs" sub={`Arrival windows, shown in ${org.timezone}.`} />
-      {!rows?.length ? <Empty title="Nothing booked yet" body="Jobs your receptionist books appear here." /> : (
+      {!rows?.length ? <Empty title="Nothing booked yet" body="Jobs your receptionist books appear here with the address, the problem and the arrival window." href="/dashboard/agent" cta="Set arrival windows" /> : (
         <div className="space-y-3">
           {rows.map((a) => {
             const c = a.contacts as unknown as { name: string | null; phone: string | null } | null
             return (
               <Card key={a.id} className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-brand-950">{fmtDate(a.starts_at, org.timezone)} to {new Intl.DateTimeFormat('en-US', { timeZone: org.timezone, timeStyle: 'short' }).format(new Date(a.ends_at))} <UrgencyBadge urgency={a.urgency} /> <Badge tone={a.status === 'booked' ? 'good' : 'neutral'}>{a.status}</Badge></p>
-                  <p className="text-sm text-brand-900">{c?.name ?? 'Unknown'} · {c?.phone}{a.service ? ` · ${a.service}` : ''}</p>
-                  {(a.address || a.issue) && <p className="text-sm text-brand-900">{a.issue}{a.address ? ` · ${a.address}${a.zip ? ` ${a.zip}` : ''}` : ''}</p>}
-                  {a.notes && <p className="text-sm text-brand-800/70">{a.notes}</p>}
+                  <p className="font-semibold text-ink">{fmtDate(a.starts_at, org.timezone)} to {new Intl.DateTimeFormat('en-US', { timeZone: org.timezone, timeStyle: 'short' }).format(new Date(a.ends_at))} <UrgencyBadge urgency={a.urgency} /> <Badge tone={a.status === 'booked' ? 'good' : 'neutral'}>{a.status}</Badge></p>
+                  <p className="text-sm text-ink">{c?.name ?? 'Unknown'} · {c?.phone}{a.service ? ` · ${a.service}` : ''}</p>
+                  {(a.address || a.issue) && <p className="text-sm text-ink">{a.issue}{a.address ? ` · ${a.address}${a.zip ? ` ${a.zip}` : ''}` : ''}</p>}
+                  {a.notes && <p className="text-sm text-muted">{a.notes}</p>}
                 </div>
                 {a.status === 'booked' && <form action={cancelAppointment}><input type="hidden" name="id" value={a.id} /><button className={btn.danger}>Cancel</button></form>}
               </Card>

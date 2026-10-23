@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
-// Palette: ink and steel blues for the product, hi-vis signal amber for the one action that matters,
-// green only for "good" states, red only for emergencies.
+// Every color is a semantic token defined in src/styles/globals.css with light-dark(),
+// so the whole app themes from one place and follows the system light/dark setting.
 const config: Config = {
   content: ["./src/components/**/*.{ts,tsx}", "./src/app/**/*.{ts,tsx}"],
   theme: {
@@ -11,22 +11,30 @@ const config: Config = {
         display: ["Barlow Condensed", "Barlow", "system-ui", "sans-serif"],
       },
       colors: {
-        brand: {
-          50: "#f1f5f8", 100: "#e3ebf1", 200: "#c5d5e1", 300: "#9bb6cb", 400: "#5f8bab",
-          500: "#2f6a93", 600: "#1d5580", 700: "#164468", 800: "#123650", 900: "#0f2a3f", 950: "#0b1c2b",
-        },
-        signal: { 300: "#fbd566", 400: "#f5b81c", 500: "#dd9f0a" },
-        accent: {
-          50: "#ecfdf5", 100: "#d1fae5", 200: "#a7f3d0", 500: "#10b981", 600: "#059669", 700: "#047857",
-        },
-        surface: { 50: "#f4f6f5", 100: "#eaeeed" },
+        canvas: "var(--canvas)",
+        surface: { DEFAULT: "var(--surface)", 2: "var(--surface-2)" },
+        line: { DEFAULT: "var(--line)" },
+        control: "var(--control)",
+        ink: "var(--ink)",
+        muted: "var(--muted)",
+        faint: "var(--faint)",
+        primary: { DEFAULT: "var(--primary)", hover: "var(--primary-hover)", fg: "var(--primary-fg)" },
+        signal: { DEFAULT: "var(--signal)", hover: "var(--signal-hover)", fg: "var(--signal-fg)" },
+        danger: { DEFAULT: "var(--danger)", soft: "var(--danger-soft)" },
+        good: { DEFAULT: "var(--good)", soft: "var(--good-soft)" },
+        warn: { DEFAULT: "var(--warn)", soft: "var(--warn-soft)" },
+        band: "var(--band)",
       },
-      borderRadius: { DEFAULT: "6px", lg: "8px", xl: "10px", "2xl": "12px" },
+      // One radius scale: 8px controls, 12px panels.
+      borderRadius: { DEFAULT: "8px", lg: "8px", xl: "12px" },
+      // Hairline border first; shadows stay diffuse and under 0.08 alpha. Dark mode swaps shadow for an edge highlight.
       boxShadow: {
-        soft: "0 1px 2px 0 rgb(11 28 43 / 0.08)",
-        card: "0 1px 3px 0 rgb(11 28 43 / 0.08), 0 1px 2px -1px rgb(11 28 43 / 0.06)",
-        elevated: "0 10px 24px -8px rgb(11 28 43 / 0.25)",
+        soft: "0 1px 2px 0 var(--shadow)",
+        card: "0 1px 3px 0 var(--shadow), inset 0 1px 0 0 var(--edge)",
+        elevated: "0 12px 32px -12px var(--shadow), inset 0 1px 0 0 var(--edge)",
       },
+      transitionDuration: { DEFAULT: "150ms" },
+      transitionTimingFunction: { DEFAULT: "cubic-bezier(0.16, 1, 0.3, 1)" },
     },
   },
   plugins: [],
