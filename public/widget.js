@@ -11,15 +11,16 @@
   var label = s.getAttribute('data-label') || 'Talk to us';
   var left = s.getAttribute('data-position') === 'left';
 
-  var css = '.dd-btn,.dd-panel{position:fixed;bottom:16px;' + (left ? 'left' : 'right') + ':16px;z-index:2147483000;font-family:system-ui,-apple-system,Segoe UI,sans-serif}' +
-    '.dd-btn{min-height:48px;padding:0 20px;border:0;border-radius:8px;background:#1d5580;color:#fff;font-size:16px;font-weight:500;cursor:pointer;box-shadow:0 4px 16px rgba(11,28,43,.18)}' +
-    '.dd-btn:hover{background:#164468}.dd-btn:focus-visible,.dd-x:focus-visible{outline:2px solid #fbd566;outline-offset:2px}' +
-    '.dd-panel{display:none;flex-direction:column;width:360px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 32px);background:#fff;border:1px solid rgba(11,28,43,.15);border-radius:12px;overflow:hidden;box-shadow:0 12px 32px rgba(11,28,43,.2)}' +
+  var css = '.dd-btn,.dd-panel{position:fixed;bottom:16px;' + (left ? 'left' : 'right') + ':16px;z-index:2147483000;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}' +
+    '.dd-btn{min-height:48px;padding:0 20px;border:0;border-radius:10px;background:#6657e8;color:#fff;font-size:16px;font-weight:600;cursor:pointer;box-shadow:0 6px 16px rgba(34,31,79,.14)}' +
+    '.dd-btn:hover{background:#5546d6}.dd-btn:focus-visible,.dd-x:focus-visible{outline:2px solid #6657e8;outline-offset:2px}' +
+    '.dd-panel{display:none;flex-direction:column;width:360px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 32px);background:#fff;border:1px solid #e9ebf2;border-radius:15px;overflow:hidden;box-shadow:0 12px 32px rgba(34,31,79,.12)}' +
     '.dd-panel[data-open="true"]{display:flex;animation:dd-in .2s cubic-bezier(.16,1,.3,1)}' +
     '.dd-bar{display:flex;justify-content:flex-end;padding:4px;background:#fff}' +
-    '.dd-x{min-height:44px;padding:0 12px;border:0;background:transparent;color:#435766;font-size:14px;cursor:pointer;border-radius:8px}' +
-    '.dd-frame{flex:1;border:0;width:100%}' +
+    '.dd-x{min-height:44px;padding:0 12px;border:0;background:transparent;color:#626980;font-size:14px;cursor:pointer;border-radius:10px}' +
+    '.dd-frame{flex:1;border:0;width:100%;background:#f6f7fb}' +
     '@keyframes dd-in{from{opacity:0;transform:translateY(8px)}}' +
+    '@media (prefers-color-scheme:dark){.dd-panel,.dd-bar{background:#151728;border-color:#262944}.dd-x{color:#a3a8c0}.dd-frame{background:#0d0e1a}}' +
     '@media (prefers-reduced-motion:reduce){.dd-panel[data-open="true"]{animation:none}}';
   var style = document.createElement('style'); style.textContent = css; document.head.appendChild(style);
 

@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import type { LucideIcon } from 'lucide-react'
+import { CountUp } from '@/components/CountUp'
 
 /** Shared building blocks. All colors are semantic tokens from globals.css. Controls are 44px tall for touch. */
 export const btn = {
@@ -23,9 +25,9 @@ export function Panel({ children, className = '' }: { children: ReactNode; class
 
 export function PageHeader({ title, sub, action }: { title: string; sub?: string; action?: ReactNode }) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 className="font-display text-3xl text-ink">{title}</h1>
+        <h1 className="font-display text-[27px] font-extrabold tracking-tight text-ink">{title}</h1>
         {sub && <p className="mt-1 max-w-prose text-sm text-muted">{sub}</p>}
       </div>
       {action}
@@ -33,12 +35,21 @@ export function PageHeader({ title, sub, action }: { title: string; sub?: string
   )
 }
 
-export function Stat({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
+export function Stat({ label, value, hint, progress, icon: Icon }: { label: string; value: string | number; hint?: string; progress?: number; icon?: LucideIcon }) {
+  const ratio = progress !== undefined && Number.isFinite(progress) ? Math.max(0, progress) : undefined
   return (
-    <Card className="!p-6">
-      <p className="text-sm text-muted">{label}</p>
-      <p className="mt-2 font-display text-4xl font-semibold leading-[1.1] tabular-nums text-ink">{value}</p>
-      {hint && <p className="mt-2 text-xs text-faint">{hint}</p>}
+    <Card className="!p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-muted">{label}</p>
+        {Icon && <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-surface-2 text-primary"><Icon className="h-4 w-4" aria-hidden /></span>}
+      </div>
+      <p className="mt-2 font-display text-3xl font-extrabold leading-tight tracking-tight tabular-nums text-ink"><CountUp value={value} /></p>
+      {ratio !== undefined && (
+        <div role="progressbar" aria-label={`${label}, share of plan used`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.min(ratio, 1) * 100)} className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-2">
+          <div className={`bar-grow h-full origin-left rounded-full ${ratio > 1 ? 'bg-warn' : 'bg-primary'}`} style={{ transform: `scaleX(${Math.min(ratio, 1)})` }} />
+        </div>
+      )}
+      {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
     </Card>
   )
 }

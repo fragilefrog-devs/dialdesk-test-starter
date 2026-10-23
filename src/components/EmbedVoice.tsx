@@ -1,6 +1,8 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Mic, MicOff, PhoneOff } from 'lucide-react'
+import { Waveform } from '@/components/LiveCall'
+import { BrandMark } from '@/components/marketing'
 import { btn } from './ui'
 
 type Phase = 'idle' | 'connecting' | 'live' | 'ended' | 'error'
@@ -53,26 +55,34 @@ export function EmbedVoice({ publicKey, assistantId, businessName }: { publicKey
   const toggleMute = () => { const m = !muted; vapi.current?.setMuted(m); setMuted(m) }
 
   return (
-    <main className="flex min-h-screen flex-col gap-5 p-6">
-      <header>
-        <h1 className="font-display text-2xl text-ink">{businessName}</h1>
-        <p className="mt-1 text-sm text-muted">Talk to our virtual assistant. It can book a visit or take a message. This is an AI, and the call may be recorded.</p>
+    <main className="flex min-h-[100dvh] flex-col gap-4 bg-canvas p-4">
+      <header className="flex items-start gap-3 rounded-xl border border-line bg-surface p-4 shadow-card">
+        <BrandMark className="h-10 w-10 rounded-lg" />
+        <div className="min-w-0">
+          <h1 className="font-display text-lg font-bold leading-snug text-ink">{businessName}</h1>
+          <p className="mt-0.5 text-xs font-medium text-primary">Voice assistant</p>
+          <p className="mt-2 text-xs leading-relaxed text-muted">Talk to our virtual assistant. It can book a visit or take a message. This is an AI, and the call may be recorded.</p>
+        </div>
       </header>
 
       {(phase === 'idle' || phase === 'ended' || phase === 'error') && (
-        <div className="mt-auto space-y-4">
+        <section className="mt-auto rounded-xl border border-line bg-surface p-4 shadow-card">
+          <p className="mb-4 text-sm leading-relaxed text-muted">Have a question or need to schedule a service visit? Start a voice call and we’ll help with the next step.</p>
           {phase === 'ended' && <p role="status" className="text-sm font-medium text-ink">Call ended. Thanks for calling.</p>}
           {phase === 'error' && <p role="alert" className="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">{error}</p>}
-          <button onClick={start} className={`${btn.primary} w-full`}><Mic className="h-4 w-4" aria-hidden />{phase === 'idle' ? 'Start voice call' : 'Start a new call'}</button>
-          <p className="text-xs text-faint">Your browser will ask to use your microphone.</p>
-        </div>
+          <button onClick={start} className={`${btn.primary} w-full`}><Mic className="h-4 w-4" aria-hidden />{phase === 'idle' ? 'Start a conversation' : 'Start a new call'}</button>
+          <p className="mt-3 text-center text-xs text-faint">Your browser will ask to use your microphone.</p>
+        </section>
       )}
 
       {(phase === 'connecting' || phase === 'live') && (
         <>
-          <section aria-label="Call status" className="rounded-xl border border-line bg-surface p-4">
-            <p className="text-sm font-medium text-ink" role="status">{phase === 'connecting' ? 'Connecting…' : speaking ? 'Assistant is speaking' : muted ? 'You are muted' : 'Listening'}</p>
-            <div aria-hidden className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-2">
+          <section aria-label="Call status" className="rounded-xl border border-line bg-surface p-4 shadow-card">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-ink" role="status">{phase === 'connecting' ? 'Connecting...' : speaking ? 'Assistant is speaking' : muted ? 'You are muted' : 'Listening'}</p>
+              {phase === 'live' && <Waveform bars={16} className="h-6" />}
+            </div>
+            <div role="meter" aria-label="Microphone audio level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(level * 100)} className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-2">
               <div className="h-full origin-left rounded-full bg-primary transition-transform" style={{ transform: `scaleX(${phase === 'live' ? Math.max(0.04, level) : 0.04})` }} />
             </div>
           </section>

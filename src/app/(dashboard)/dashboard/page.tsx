@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { CalendarDays, Clock3, Phone, Siren } from 'lucide-react'
 import { requireOrg } from '@/lib/auth'
 import { limitsFor } from '@/lib/plans'
 import { Card, OutcomeBadge, PageHeader, Stat, UrgencyBadge, fmtDate, fmtDur } from '@/components/ui'
@@ -48,10 +49,10 @@ export default async function Overview({ searchParams }: { searchParams: Promise
         </Card>
       )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Calls this month" value={usage.data?.calls ?? 0} />
-        <Stat label="Minutes used" value={`${used}/${limit}`} hint={used > limit ? 'Overage billing applies' : `${Math.max(0, limit - used)} left`} />
-        <Stat label="Emergencies (30 days)" value={emergencies.count ?? 0} />
-        <Stat label="Upcoming jobs" value={booked.count ?? 0} />
+        <Stat label="Calls this month" value={usage.data?.calls ?? 0} icon={Phone} />
+        <Stat label="Minutes used" value={`${used}/${limit}`} icon={Clock3} progress={limit > 0 ? used / limit : undefined} hint={used > limit ? 'Overage billing applies' : `${Math.max(0, limit - used)} left`} />
+        <Stat label="Emergencies (30 days)" value={emergencies.count ?? 0} icon={Siren} />
+        <Stat label="Upcoming jobs" value={booked.count ?? 0} icon={CalendarDays} />
       </div>
       <h2 className="mb-3 mt-8 font-display text-xl font-semibold text-ink">Recent calls</h2>
       <Card className="divide-y divide-line !p-0">

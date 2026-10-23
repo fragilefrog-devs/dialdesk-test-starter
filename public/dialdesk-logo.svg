@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 48">
+  <rect x="0" y="4" width="40" height="40" rx="12" fill="#6657e8"/>
+  <rect x="11" y="19" width="4" height="10" rx="2" fill="#d9d4ff"/>
+  <rect x="18" y="13" width="4" height="22" rx="2" fill="#fff"/>
+  <rect x="25" y="17" width="4" height="14" rx="2" fill="#ece9ff"/>
+  <text x="50" y="34" fill="#191b2d" font-family="Manrope, Arial, sans-serif" font-size="26" font-weight="800" letter-spacing="-1">DialDesk</text>
+</svg>

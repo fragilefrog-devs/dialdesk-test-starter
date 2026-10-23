@@ -23,6 +23,19 @@ export function CheckoutButton({ plan, label, primary }: { plan: string; label: 
 }
 
 export function PortalButton() {
-  const [busy, setBusy] = useState(false)
-  return <button disabled={busy} className={btn.secondary} onClick={async () => { setBusy(true); try { await go('/api/billing/portal') } catch { setBusy(false) } }}>{busy ? 'Opening…' : 'Manage billing & invoices'}</button>
+  const [busy, setBusy] = useState(false), [err, setErr] = useState('')
+  return (
+    <>
+      <button disabled={busy} className={btn.secondary} onClick={async () => {
+        setBusy(true)
+        setErr('')
+        try { await go('/api/billing/portal') }
+        catch (error) {
+          setErr(error instanceof Error ? error.message : 'Could not open billing management.')
+          setBusy(false)
+        }
+      }}>{busy ? 'Opening…' : 'Manage billing & invoices'}</button>
+      {err && <p role="alert" className="mt-1 text-xs text-danger">{err}</p>}
+    </>
+  )
 }

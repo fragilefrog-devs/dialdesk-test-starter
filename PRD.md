@@ -27,6 +27,10 @@ A "Talk to us" button for the customer's site: `widget.js` opens an iframe (`/em
 - Owner SMS and email alerts for emergencies, new jobs and messages; caller SMS confirmation (needs a registered SMS sender).
 - Dashboard: calls (outcome, urgency, summary, transcript, recording), messages, jobs, numbers, billing, team.
 - Billing by plan with included minutes and overage; lapsed accounts stop answering.
+- Plan changes: Stripe Checkout and the billing portal manage subscriptions. After a successful Checkout return, the server verifies the session, payment, customer, workspace and subscription price, then persists the plan and subscription status before the UI presents the new plan as current. The dashboard refreshes from the persisted organization record. Portal returns reconcile the current subscription from Stripe.
+- Stripe subscription webhooks reconcile later updates and cancellations and must be signature-verified and retry-safe. Incomplete or unpaid Checkout sessions do not activate a plan. A stale cancellation event must not clear a newer subscription. If receptionist routing sync fails after the billing row is saved, surface that state and allow webhook retries rather than hiding the failure.
+- Responsive dashboard navigation: the mobile sidebar opens as a dismissible drawer with Escape/backdrop/close controls, contained focus, focus return and background scroll lock; desktop keeps the sidebar visible.
+- Consistent DialDesk branding: use one shared brand mark and wordmark across marketing, authentication, dashboard, admin and voice embed surfaces, with the app icon sourced from the same mark.
 
 ## Out of scope for v1
 Outbound calls, field-service integrations (ServiceTitan, Jobber, Housecall Pro), calendar sync, price quoting, payments by phone, multi-language beyond the listed options.

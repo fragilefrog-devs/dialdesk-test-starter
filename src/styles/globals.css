@@ -1,43 +1,44 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap');
 @import 'tailwindcss';
 @config '../../tailwind.config.ts';
 
 /* ── Design tokens ───────────────────────────────────────────
    Surfaces: canvas (L0) > surface (L1 panels, lists, sidebar) > surface-2 (hover, wells).
-   60% canvas, 30% surface, 10% accent: primary carries actions and focus, signal only the one marketing CTA,
-   danger only emergencies. Every text pair clears WCAG AA. */
+   The mockup's neutral canvas, white panels and violet action color are shared across light and dark themes.
+   Status colors remain semantic, and every text pair clears WCAG AA. */
 :root {
   color-scheme: light dark;
 
-  --canvas: light-dark(#f4f6f5, #0b141b);
-  --surface: light-dark(#ffffff, #111c25);
-  --surface-2: light-dark(#edf1f0, #172531);
-  --line: light-dark(rgb(11 28 43 / 0.1), rgb(255 255 255 / 0.09));
-  --control: light-dark(#7d8d99, #5d7282);          /* 3:1 boundary for inputs and buttons */
+  --canvas: light-dark(#f6f7fb, #0d0e1a);
+  --surface: light-dark(#ffffff, #151728);
+  --surface-2: light-dark(#f0edff, #262057);
+  --line: light-dark(#e9ebf2, #262944);
+  --control: light-dark(#858ba0, #747b96);
 
-  --ink: light-dark(#0b1c2b, #e8eef2);
-  --muted: light-dark(#435766, #a2b4c0);
-  --faint: light-dark(#596d7c, #8497a5);
+  --ink: light-dark(#191b2d, #eceefa);
+  --muted: light-dark(#626980, #a3a8c0);
+  --faint: light-dark(#747b91, #9aa0ba);
 
-  --primary: light-dark(#1d5580, #7fb2d6);
-  --primary-hover: light-dark(#164468, #a3c8e2);
-  --primary-fg: light-dark(#ffffff, #0b1c2b);
-  --focus: light-dark(#2f6a93, #7fb2d6);
+  --primary: light-dark(#6657e8, #7d70f2);
+  --primary-hover: light-dark(#5546d6, #9287ff);
+  --primary-fg: #ffffff;
+  --focus: light-dark(#6657e8, #a69cff);
+  --accent: light-dark(#b9b0ff, #c4baff);
+  --band-fg: #eceefa;
 
-  --signal: #f5b81c;
-  --signal-hover: #fbd566;
-  --signal-fg: #0b1c2b;
+  --signal: var(--primary);
+  --signal-hover: var(--primary-hover);
+  --signal-fg: #ffffff;
 
-  --danger: light-dark(#a8231c, #ff8f86);
-  --danger-soft: light-dark(#fdeceb, #3a1b1d);
-  --good: light-dark(#0b6b4a, #5fd0a1);
-  --good-soft: light-dark(#e3f5ec, #123227);
-  --warn: light-dark(#8a5a00, #f2c14e);
-  --warn-soft: light-dark(#fdf1d6, #3a2f12);
-  --band: light-dark(#0b1c2b, #172531);
+  --danger: light-dark(#d95362, #ff8b9a);
+  --danger-soft: light-dark(#fdecef, #3a202b);
+  --good: light-dark(#1b9b73, #54d1a5);
+  --good-soft: light-dark(#e8f8f1, #123127);
+  --warn: light-dark(#9b6517, #f0b35a);
+  --warn-soft: light-dark(#fff5df, #372b12);
+  --band: light-dark(#222044, #151728);
 
-  --shadow: light-dark(rgb(11 28 43 / 0.06), rgb(0 0 0 / 0.4));
-  --edge: light-dark(transparent, rgb(255 255 255 / 0.05));
+  --shadow: light-dark(rgb(34 31 79 / 0.035), rgb(0 0 0 / 0.35));
+  --edge: light-dark(transparent, rgb(255 255 255 / 0.06));
 
   /* Motion: four durations, one ease-out for entering, one ease-in for leaving. */
   --m-100: 100ms;
@@ -51,18 +52,21 @@
   scrollbar-color: var(--control) transparent;
 }
 
+:root[data-theme='light'] { color-scheme: light; }
+:root[data-theme='dark'] { color-scheme: dark; }
+
 @layer base {
   html, body {
     max-width: 100vw;
     overflow-x: hidden;
     background-color: var(--canvas);
     color: var(--ink);
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
     font-size: 1rem;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3 { font-family: 'Barlow Condensed', 'Barlow', system-ui, sans-serif; font-weight: 600; line-height: 1.15; }
+  h1, h2, h3 { font-family: var(--font-manrope), system-ui, sans-serif; font-weight: 700; line-height: 1.2; }
   a { color: inherit; text-decoration: none; }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
   ::selection { background: color-mix(in srgb, var(--primary) 28%, transparent); }
@@ -88,6 +92,40 @@
   animation-delay: calc(var(--i, 0) * 100ms);
   @media (prefers-reduced-motion: reduce) { animation: none; }
 }
+
+/* Marketing surfaces use the product tokens and remain static for reduced motion. */
+.glass { background: color-mix(in srgb, var(--surface) 82%, transparent); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); }
+.header-glass { background: color-mix(in srgb, var(--canvas) 88%, transparent); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); }
+.mesh { position: relative; isolation: isolate; overflow: hidden; }
+.mesh::before { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(60% 55% at 85% 8%, color-mix(in srgb, var(--primary) 20%, transparent), transparent 70%), radial-gradient(45% 45% at 4% 28%, color-mix(in srgb, var(--signal) 16%, transparent), transparent 70%), radial-gradient(40% 40% at 60% 100%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%); }
+.marketing-hero { isolation: isolate; }
+.marketing-hero::before { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(70% 90% at 100% 0%, color-mix(in srgb, var(--primary) 8%, transparent), transparent 72%); pointer-events: none; }
+.auth-story { isolation: isolate; }
+.auth-story::before { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(70% 70% at 100% 0%, color-mix(in srgb, var(--primary) 28%, transparent), transparent 70%); pointer-events: none; }
+@media (max-height: 700px) { .auth-form { align-items: flex-start; } }
+.dots { background-image: radial-gradient(color-mix(in srgb, var(--ink) 12%, transparent) 1px, transparent 1px); background-size: 22px 22px; -webkit-mask-image: linear-gradient(to bottom, #000 25%, transparent); mask-image: linear-gradient(to bottom, #000 25%, transparent); }
+.orb { position: absolute; z-index: -1; border-radius: 9999px; filter: blur(64px); opacity: 0.3; pointer-events: none; }
+.text-gradient { background: linear-gradient(95deg, var(--primary), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.bento { transition: border-color var(--m-200) var(--ease-out), box-shadow var(--m-200) var(--ease-out); }
+.bento:hover { border-color: color-mix(in srgb, var(--primary) 50%, var(--line)); box-shadow: 0 12px 28px -18px color-mix(in srgb, var(--primary) 40%, transparent); }
+.cta-glow { box-shadow: 0 6px 20px -12px color-mix(in srgb, var(--signal) 60%, transparent); }
+dialog::backdrop { background: color-mix(in srgb, var(--band) 60%, transparent); }
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .header-glass { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+@keyframes wave { to { transform: scaleY(1); } }
+.wave i { display: block; width: 3px; height: 100%; border-radius: 3px; background: currentColor; transform: scaleY(0.2); animation: wave var(--s, 1s) ease-in-out var(--d, 0s) infinite alternate; }
+@keyframes live-ping { to { transform: scale(2.6); opacity: 0; } }
+.live-dot { position: relative; width: 0.625rem; height: 0.625rem; border-radius: 9999px; background: var(--danger); }
+.live-dot::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: live-ping 1.6s var(--ease-out) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .wave i { animation: none; transform: scaleY(0.5); }
+  .live-dot::after { animation: none; display: none; }
+}
+
+@keyframes bar-grow { from { transform: scaleX(0); } }
+.bar-grow { animation: bar-grow var(--m-300) var(--ease-out) both; @media (prefers-reduced-motion: reduce) { animation: none; } }
 
 /* Scroll reveal: progressive enhancement. Without support, or with reduced motion, content is simply visible. */
 @keyframes reveal { from { opacity: 0; translate: 0 8px; } }
