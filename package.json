@@ -6,11 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "node .next/standalone/server.js",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint src",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "tsc --noEmit && eslint src --ext .ts,.tsx",
+    "check": "tsc --noEmit && eslint src",
     "clear": "rm -rf node_modules package-lock.json .next"
   },
   "dependencies": {
@@ -39,11 +39,11 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^20.17.30",
+    "@types/node": "^22.20.5",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.21",
-    "eslint": "^8.57.1",
+    "eslint": "^9.39.5",
     "eslint-config-next": "^16.4.2",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.3.3",

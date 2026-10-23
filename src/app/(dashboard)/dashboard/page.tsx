@@ -9,6 +9,8 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const { welcome } = await searchParams
   const { supabase, org } = await requireOrg()
   const monthStart = new Date(); monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0)
+  // server component: runs once per request, so reading the clock here is correct
+  // eslint-disable-next-line react-hooks/purity
   const since30 = new Date(Date.now() - 30 * 86400000).toISOString()
 
   const [usage, emergencies, booked, calls, nums, agent, anyCall] = await Promise.all([
