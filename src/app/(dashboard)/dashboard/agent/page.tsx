@@ -1,5 +1,6 @@
 import { SubmitButton } from '@/components/SubmitButton'
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { requireOrg } from '@/lib/auth'
 import { saveAgent } from '../actions'
 import { cleanWindows } from '@/lib/trades'
@@ -14,8 +15,20 @@ const hint = 'mt-1 text-xs text-faint'
 export default async function AgentPage({ searchParams }: { searchParams: Promise<{ error?: string; ok?: string; setup?: string }> }) {
   const { error, ok, setup } = await searchParams
   const { supabase, org, role } = await requireOrg()
-  const { data: a } = await supabase.from('agents').select('*').eq('org_id', org.id).order('created_at').limit(1).single()
-  if (!a) return null
+  const { data: a, error: loadError } = await supabase.from('agents').select('*').eq('org_id', org.id).order('created_at').limit(1).maybeSingle()
+  if (loadError) console.error('Receptionist page: could not load receptionist settings', loadError)
+
+  if (loadError || !a) {
+    return (
+      <>
+        <PageHeader title="Receptionist" sub="How your assistant answers, books and escalates." />
+        {loadError
+          ? <Notice kind="error">We could not load your receptionist settings. <Link href="/dashboard/agent" className="font-semibold underline underline-offset-4">Try again</Link>.</Notice>
+          : <Notice kind="error">Your receptionist is not set up yet. Set up your receptionist first, then <Link href="/dashboard/agent" className="font-semibold underline underline-offset-4">try again</Link>.</Notice>}
+      </>
+    )
+  }
+
   const hours = a.business_hours as Record<string, [string, string]>
   const windows = cleanWindows(a.arrival_windows)
   const rows = [0, 1, 2, 3].map((i) => windows[i] ?? ['', ''])
