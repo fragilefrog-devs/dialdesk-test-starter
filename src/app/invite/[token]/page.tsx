@@ -1,3 +1,4 @@
+import { SubmitButton } from '@/components/SubmitButton'
 import { redirect } from 'next/navigation'
 import { supabaseServer } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
@@ -25,12 +26,12 @@ export default async function Invite({ params, searchParams }: { params: Promise
   if (!user) redirect(`/login?next=/invite/${token}`)
   return (
     <main className="grid min-h-screen place-items-center px-5">
-      <form action={accept} className="w-full max-w-sm rounded-2xl border border-brand-200/70 bg-white p-6 text-center shadow-card">
-        <h1 className="text-xl font-bold text-brand-950">Join your team</h1>
-        <p className="mb-4 mt-1 text-sm text-brand-800/70">Signed in as {user.email}</p>
-        {error && <p role="alert" className="mb-3 text-sm text-red-700">This invite is invalid, expired, or for a different email address.</p>}
+      <form action={accept} className="w-full max-w-sm rounded-xl border border-line bg-surface p-6 text-center shadow-card">
+        <h1 className="text-xl font-semibold text-ink">Join your team</h1>
+        <p className="mb-4 mt-1 text-sm text-muted">Signed in as {user.email}</p>
+        {error && <p role="alert" className="mb-3 text-sm text-danger">This invite is invalid, expired, or for a different email address.</p>}
         <input type="hidden" name="token" value={token} />
-        <button className={`${btn.primary} w-full`}>Accept invitation</button>
+        <SubmitButton className={`${btn.primary} w-full`}>Accept invitation</SubmitButton>
       </form>
     </main>
   )

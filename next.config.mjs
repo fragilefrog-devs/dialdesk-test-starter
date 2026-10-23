@@ -67,59 +67,32 @@ const nextConfig = {
       },
     ],
   },
-  async rewrites() {
-    return [
-      { source: '/widget.js', destination: '/api/widget-script' },
-    ];
-  },
   async headers() {
+    const common = [
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'X-XSS-Protection', value: '1; mode=block' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+    ];
     return [
       {
-        // Security headers on every page/route
-        source: '/:path*',
+        // Everything except the embeddable widget page cannot be framed and never uses the microphone
+        source: '/((?!embed/).*)',
         headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          ...common,
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=()' },
+        ],
+      },
+      {
+        // The widget page is framed by customer sites (checked per business in the page) and needs the microphone
+        source: '/embed/:path*',
+        headers: [
+          ...common,
           { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=(self)' },
+          { key: 'Cache-Control', value: 'no-store' },
         ],
       },
-      {
-        // widget.js is embedded on external customer sites — must allow any origin
-        source: '/widget.js',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Content-Type', value: 'application/javascript' },
-        ],
-      },
-      {
-        // Public widget API routes — called from embedded widget on any domain
-        source: '/api/widget/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type' },
-        ],
-      },
-      {
-        // Realtime routes — called from embedded widget on any domain
-        source: '/api/realtime/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'POST, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type' },
-        ],
-      },
-      {
-        // Appointment confirm — called from embedded widget
-        source: '/api/appointments/confirm',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'POST, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type' },
-        ],
-      },
+      { source: '/widget.js', headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }] },
     ];
   },
 };

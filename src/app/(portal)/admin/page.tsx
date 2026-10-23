@@ -23,10 +23,10 @@ export default async function Admin() {
       </div>
       <Card className="overflow-x-auto !p-0">
         <table className="w-full text-left text-sm">
-          <thead className="bg-brand-50 text-xs uppercase text-brand-800/70"><tr><th className="p-3">Business</th><th>Plan</th><th>Status</th><th>Minutes (mo)</th><th>Created</th></tr></thead>
-          <tbody className="divide-y divide-brand-100">
+          <thead className="bg-surface-2 text-xs uppercase text-muted"><tr><th className="p-3">Business</th><th>Plan</th><th>Status</th><th>Minutes (mo)</th><th>Created</th></tr></thead>
+          <tbody className="divide-y divide-line">
             {(orgs.data ?? []).map((o) => (
-              <tr key={o.id}><td className="p-3 font-medium">{o.name} <span className="text-brand-800/50">/{o.slug}</span></td><td className="capitalize">{o.plan}</td>
+              <tr key={o.id}><td className="p-3 font-medium">{o.name} <span className="text-faint">/{o.slug}</span></td><td className="capitalize">{o.plan}</td>
                 <td><Badge tone={o.subscription_status === 'active' ? 'good' : 'neutral'}>{o.subscription_status}</Badge></td>
                 <td className="tabular-nums">{Math.ceil((mins.get(o.id) ?? 0) / 60)}</td><td>{fmtDate(o.created_at)}</td></tr>
             ))}

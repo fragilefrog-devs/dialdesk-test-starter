@@ -1,7 +1,7 @@
 import { requireOrg } from '@/lib/auth'
 import { stripe, priceIdFor } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { env } from '@/lib/env'
+import { appEnv } from '@/lib/env'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -33,8 +33,8 @@ export async function POST(req: Request) {
     allow_promotion_codes: true,
     subscription_data: { metadata: { org_id: org.id } },
     client_reference_id: org.id,
-    success_url: `${env().NEXT_PUBLIC_APP_URL}/dashboard/billing?status=success`,
-    cancel_url: `${env().NEXT_PUBLIC_APP_URL}/dashboard/billing`,
+    success_url: `${appEnv().NEXT_PUBLIC_APP_URL}/dashboard/billing?status=success`,
+    cancel_url: `${appEnv().NEXT_PUBLIC_APP_URL}/dashboard/billing`,
   })
   return Response.json({ url: session.url })
 }

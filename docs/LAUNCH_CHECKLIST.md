@@ -3,19 +3,19 @@
 ## A. Smoke tests (do first — provider paths are unverified)
 - [ ] Sign up, confirm email, create workspace; second user in another workspace cannot see the first's rows (try direct Supabase queries with user JWT).
 - [ ] Confirm an organization admin cannot change `plan` or subscription fields with a user JWT; only trusted billing code can write them.
-- [ ] Widget call: greeting plays, `search_knowledge` answers from your docs, booking creates a row, double-booking the same slot is rejected.
-- [ ] Phone call: Twilio → gateway → Whisper.cpp → Ollama → Piper; transcript + summary saved; `calls.duration_seconds` matches Twilio. Confirm callers wait for the agent to finish before speaking (barge-in is not supported).
+- [ ] Work through `docs/TEST_CALLS.md`: at least 27 of 30 scripted calls pass (emergencies, booking, out-of-area, price questions, transfers).
+- [ ] Phone call: Vapi number answers; transcript, summary, recording link and outcome saved; `calls.duration_seconds` matches Vapi.
 - [ ] `transfer_to_human` rings the configured number.
 - [ ] Stripe test-mode checkout upgrades the org; cancel in portal downgrades it; replaying a webhook is a no-op.
 - [ ] Unpaid/expired trial → callers hear the unavailable message before local inference starts.
-- [ ] Verify Whisper/Piper model files exist on each gateway instance and Ollama is reachable from the app server.
+- [ ] Two phones book the same window at once: capacity is respected and the second caller is offered another window.
 
 ## B. Security
 - [ ] Keep secrets only in host env (never commit `.env*`); verify the repository and Docker build context exclude local env files.
-- [ ] `INTERNAL_API_SECRET` ≥ 32 random bytes; gateway ↔ app over HTTPS only.
+- [ ] `VAPI_WEBHOOK_SECRET` is 32+ random bytes; a request without it to `/api/vapi/webhook` returns 401.
 - [ ] Replace in-memory rate limiter (`src/lib/rate-limit.ts`) with Upstash/Redis before running >1 app instance; add Cloudflare/WAF in front of `/api/realtime/session` (it spends money per call).
-- [ ] Set Twilio spend limits and alerts; per-call cap is `MAX_CALL_SECONDS` (default 30 min). Monitor gateway CPU, memory, and model latency.
-- [ ] Add Sentry (app + gateway) and uptime checks on `/api/health` and gateway `/health`.
+- [ ] Set Vapi usage limits and alerts. Calls cap at 15 minutes per assistant. Confirm cost per call against plan prices.
+- [ ] Add Sentry and an uptime check on `/api/health`. Alert on webhook 5xx and failed owner SMS.
 - [ ] Supabase: enable PITR backups; restrict service-role key to server envs only.
 
 ## C. Legal / compliance (get counsel to review — templates in `/terms`, `/privacy` are placeholders)
@@ -29,3 +29,7 @@
 - [ ] Unit economics verified with real invoices (see `docs/GTM.md` §4).
 - [ ] Support inbox, status page, ToS/Privacy published, cancellation flow tested.
 - [ ] Email confirmations/reminders to callers (not built) — top requested feature for booking businesses.
+
+- [ ] Owner SMS: sender registered (A2P 10DLC or toll-free); an emergency test text arrives within seconds.
+- [ ] Counsel reviewed the AI and recording disclosure, the gas/CO safety script, and terms for the pilot state.
+- [ ] Payments: US entity or merchant-of-record route settled before charging US customers.

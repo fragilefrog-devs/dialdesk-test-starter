@@ -1,7 +1,8 @@
 import type Stripe from 'stripe'
 import { stripe, planFromPriceId } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { env } from '@/lib/env'
+import { stripeEnv } from '@/lib/env'
+import { syncOrgAgents } from '@/lib/vapi-sync'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,7 +10,7 @@ export async function POST(req: Request) {
   const raw = await req.text()
   let event: Stripe.Event
   try {
-    event = stripe().webhooks.constructEvent(raw, req.headers.get('stripe-signature') ?? '', env().STRIPE_WEBHOOK_SECRET)
+    event = stripe().webhooks.constructEvent(raw, req.headers.get('stripe-signature') ?? '', stripeEnv().STRIPE_WEBHOOK_SECRET)
   } catch {
     return new Response('Bad signature', { status: 400 })
   }
@@ -37,6 +38,8 @@ export async function POST(req: Request) {
       console.error('[stripe] Failed to update subscription', { eventId: event.id, error })
       return new Response('Could not process subscription event', { status: 500 })
     }
+    // Attach or detach the org's phone numbers to match its new billing state
+    await syncOrgAgents(org.id)
   }
 
   // Record only after side effects succeed so Stripe retries can recover from

@@ -1,14 +1,14 @@
 import Stripe from 'stripe'
-import { env } from './env'
+import { stripeEnv } from './env'
 import { PLANS, type PlanId } from './plans'
 
 let client: Stripe | null = null
-export const stripe = () => (client ??= new Stripe(env().STRIPE_SECRET_KEY))
+export const stripe = () => (client ??= new Stripe(stripeEnv().STRIPE_SECRET_KEY))
 
-export const priceIdFor = (plan: PlanId) => env()[PLANS[plan].priceEnv]
+export const priceIdFor = (plan: PlanId) => stripeEnv()[PLANS[plan].priceEnv]
 
 export function planFromPriceId(priceId: string): PlanId | null {
-  const e = env()
+  const e = stripeEnv()
   for (const p of Object.values(PLANS)) if (e[p.priceEnv] === priceId) return p.id
   return null
 }

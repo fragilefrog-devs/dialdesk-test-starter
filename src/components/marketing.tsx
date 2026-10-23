@@ -2,18 +2,24 @@ import Link from 'next/link'
 import { PLANS } from '@/lib/plans'
 import { btn } from './ui'
 
+export function Wordmark({ light = false }: { light?: boolean }) {
+  return (
+    <span className={`flex items-center gap-2 font-display text-2xl font-semibold ${light ? 'text-[#e8eef2]' : 'text-ink'}`}>
+      <span aria-hidden className="h-5 w-5 rounded-sm bg-signal" />DialDesk
+    </span>
+  )
+}
+
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b border-brand-200/60 bg-white/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-        <Link href="/" className="flex items-center gap-2 font-bold text-brand-900">
-          <span aria-hidden className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white">☎</span> Receptionist AI
-        </Link>
-        <nav className="flex items-center gap-5 text-sm font-medium text-brand-800">
-          <Link href="/#how" className="hidden sm:block hover:text-brand-600">How it works</Link>
-          <Link href="/pricing" className="hover:text-brand-600">Pricing</Link>
-          <Link href="/login" className="hover:text-brand-600">Log in</Link>
-          <Link href="/signup" className={btn.primary}>Start free trial</Link>
+    <header className="sticky top-0 z-30 border-b border-line bg-canvas">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-6">
+        <Link href="/" aria-label="DialDesk home"><Wordmark /></Link>
+        <nav className="flex items-center gap-2 text-sm font-medium text-muted sm:gap-4">
+          <Link href="/#how" className="hidden min-h-11 items-center px-2 transition hover:text-ink sm:flex">How it works</Link>
+          <Link href="/pricing" className="flex min-h-11 items-center px-2 transition hover:text-ink">Pricing</Link>
+          <Link href="/login" className="flex min-h-11 items-center px-2 transition hover:text-ink">Log in</Link>
+          <Link href="/signup" className={`${btn.primary} hidden sm:inline-flex`}>Start free trial</Link>
         </nav>
       </div>
     </header>
@@ -22,10 +28,10 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-brand-200/60 bg-white">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-8 text-sm text-brand-800/70">
-        <p>© {new Date().getFullYear()} Receptionist AI. Calls are handled by an AI assistant and may be recorded and transcribed.</p>
-        <nav className="flex gap-5"><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></nav>
+    <footer className="border-t border-line">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-8 text-sm text-muted md:px-6">
+        <p>© {new Date().getFullYear()} DialDesk. Calls are answered by an AI assistant and may be recorded.</p>
+        <nav className="flex gap-2"><Link href="/terms" className="flex min-h-11 items-center px-2 hover:text-ink">Terms</Link><Link href="/privacy" className="flex min-h-11 items-center px-2 hover:text-ink">Privacy</Link></nav>
       </div>
     </footer>
   )
@@ -33,15 +39,14 @@ export function SiteFooter() {
 
 export function PricingGrid() {
   return (
-    <div className="grid gap-5 md:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-3">
       {Object.values(PLANS).map((p) => (
-        <div key={p.id} className={`flex flex-col rounded-2xl border bg-white p-6 shadow-card ${p.highlight ? 'border-brand-500 ring-2 ring-brand-400/30' : 'border-brand-200/70'}`}>
-          {p.highlight && <span className="mb-3 w-fit rounded-full bg-brand-600 px-2.5 py-0.5 text-xs font-semibold text-white">Most popular</span>}
-          <h3 className="text-lg font-bold text-brand-950">{p.name}</h3>
-          <p className="mt-2"><span className="text-4xl font-extrabold text-brand-950">${p.priceUsd}</span><span className="text-sm text-brand-800/70"> / month</span></p>
-          <p className="mt-1 text-xs text-brand-800/60">then ${p.overageUsdPerMin.toFixed(2)} per extra minute</p>
-          <ul className="my-5 flex-1 space-y-2 text-sm text-brand-900">
-            {p.features.map((f) => <li key={f} className="flex gap-2"><span aria-hidden className="text-accent-600">✓</span>{f}</li>)}
+        <div key={p.id} className={`reveal flex flex-col rounded-xl border bg-surface p-8 shadow-card ${p.highlight ? 'border-primary' : 'border-line'}`}>
+          <h3 className="font-display text-2xl text-ink">{p.name}</h3>
+          <p className="mt-4"><span className="font-display text-5xl font-semibold leading-[1.1] tabular-nums text-ink">${p.priceUsd}</span><span className="text-sm text-muted"> a month</span></p>
+          <p className="mt-2 text-sm text-faint">${p.overageUsdPerMin.toFixed(2)} for each extra minute</p>
+          <ul className="my-6 flex-1 space-y-3 text-sm text-ink">
+            {p.features.map((f) => <li key={f} className="flex gap-3"><span aria-hidden className="text-good">✓</span>{f}</li>)}
           </ul>
           <Link href={`/signup?plan=${p.id}`} className={p.highlight ? btn.primary : btn.secondary}>Start 14-day trial</Link>
         </div>

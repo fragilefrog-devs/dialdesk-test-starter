@@ -16,19 +16,19 @@ export interface Plan {
 
 export const PLANS: Record<PlanId, Plan> = {
   starter: {
-    id: 'starter', name: 'Starter', priceUsd: 49, minutes: 150, numbers: 1, agents: 1, seats: 2, overageUsdPerMin: 0.35,
+    id: 'starter', name: 'Solo', priceUsd: 79, minutes: 150, numbers: 1, agents: 1, seats: 2, overageUsdPerMin: 0.45,
     priceEnv: 'STRIPE_PRICE_STARTER',
-    features: ['1 AI receptionist', '1 phone number', '150 call minutes', 'Appointment booking', 'Lead capture', 'Email summaries'],
+    features: ['1 phone number', '150 call minutes', 'Emergency triage and text alerts', 'Job booking by arrival window', 'Missed-call messages by text'],
   },
   growth: {
-    id: 'growth', name: 'Growth', priceUsd: 149, minutes: 600, numbers: 3, agents: 3, seats: 5, overageUsdPerMin: 0.28,
+    id: 'growth', name: 'Crew', priceUsd: 179, minutes: 450, numbers: 2, agents: 1, seats: 6, overageUsdPerMin: 0.38,
     priceEnv: 'STRIPE_PRICE_GROWTH', highlight: true,
-    features: ['3 AI receptionists', '3 phone numbers', '600 call minutes', 'Human call transfer', 'Website voice widget', 'Priority support'],
+    features: ['2 phone numbers', '450 call minutes', 'On-call transfer for emergencies', 'Several jobs per window', 'Team seats and call recordings'],
   },
   scale: {
-    id: 'scale', name: 'Scale', priceUsd: 399, minutes: 2000, numbers: 10, agents: 10, seats: 20, overageUsdPerMin: 0.22,
+    id: 'scale', name: 'Fleet', priceUsd: 349, minutes: 1200, numbers: 5, agents: 3, seats: 20, overageUsdPerMin: 0.30,
     priceEnv: 'STRIPE_PRICE_SCALE',
-    features: ['10 AI receptionists', '10 phone numbers', '2,000 call minutes', 'Multi-location teams', 'Audit log', 'Onboarding call'],
+    features: ['5 phone numbers', '1,200 call minutes', 'Multiple receptionists and locations', 'Audit log', 'Setup call with us'],
   },
 }
 

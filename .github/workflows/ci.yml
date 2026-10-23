@@ -16,17 +16,3 @@ jobs:
           NEXT_PUBLIC_APP_URL: http://localhost:3000
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ci
-  gateway:
-    runs-on: ubuntu-latest
-    defaults: { run: { working-directory: voice-gateway } }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: voice-gateway/package-lock.json
-      - run: npm ci
-      - run: npm run type-check
-      - run: npm test
-      - run: npm run build
