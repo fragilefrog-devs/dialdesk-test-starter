@@ -12,7 +12,8 @@ One deployable: the Next.js app (Vercel works). Managed services: Supabase, Vapi
 1. Create an API key and put it in `VAPI_API_KEY`.
 2. Generate a secret (`openssl rand -hex 32`) for `VAPI_WEBHOOK_SECRET`. Optionally create a Custom Credential in Vapi (Bearer token = that secret) and set `VAPI_SERVER_CREDENTIAL_ID`.
 3. Nothing else to configure by hand: the app creates one assistant per business, points it at `<app>/api/vapi/webhook`, and provisions numbers from `/dashboard/numbers`.
-4. Check the model, voice and transcriber defaults in `.env.example` by listening to test calls.
+4. Website widget: create a **public key** in the Vapi dashboard and set it as `VAPI_PUBLIC_KEY`. The widget runs inside an iframe served from your app, so if Vapi lets you restrict the public key to allowed origins, allow only your app's origin. Also set Vapi usage limits, since widget calls are billed like phone calls.
+5. Check the model, voice and transcriber defaults in `.env.example` by listening to test calls.
 
 ## 3. Stripe
 Create three monthly Prices matching `src/lib/plans.ts` and set `STRIPE_PRICE_*`. Webhook `<app>/api/webhooks/stripe` for `customer.subscription.created|updated|deleted`. Subscription changes also attach or detach each business's numbers in Vapi. Enable the Customer Portal.

@@ -15,7 +15,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
     supabase.from('org_usage_monthly').select('calls, minutes').eq('org_id', org.id).eq('month', monthStart.toISOString()).maybeSingle(),
     supabase.from('calls').select('id', { count: 'exact', head: true }).eq('org_id', org.id).eq('urgency', 'emergency').gte('started_at', since30),
     supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('org_id', org.id).eq('status', 'booked').gte('starts_at', new Date().toISOString()),
-    supabase.from('calls').select('id, from_number, status, outcome, urgency, duration_seconds, summary, started_at').eq('org_id', org.id).order('started_at', { ascending: false }).limit(6),
+    supabase.from('calls').select('id, from_number, channel, status, outcome, urgency, duration_seconds, summary, started_at').eq('org_id', org.id).order('started_at', { ascending: false }).limit(6),
     supabase.from('phone_numbers').select('id', { count: 'exact', head: true }).eq('org_id', org.id),
     supabase.from('agents').select('service_zips, notify_phone, notify_email, transfer_number').eq('org_id', org.id).limit(1).maybeSingle(),
     supabase.from('calls').select('id', { count: 'exact', head: true }).eq('org_id', org.id),
@@ -56,7 +56,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
         {(calls.data ?? []).length === 0 && <p className="p-5 text-sm text-muted">No calls yet. Call your number to hear how it sounds.</p>}
         {(calls.data ?? []).map((c) => (
           <Link key={c.id} href="/dashboard/calls" className="flex items-start justify-between gap-4 p-4 hover:bg-surface-2">
-            <div className="min-w-0"><p className="text-sm font-medium text-ink">{c.from_number ?? 'Unknown caller'}</p><p className="truncate text-sm text-muted">{c.summary ?? 'Summary appears when the call ends.'}</p></div>
+            <div className="min-w-0"><p className="text-sm font-medium text-ink">{c.from_number ?? (c.channel === 'web' ? 'Website visitor' : 'Unknown caller')}</p><p className="truncate text-sm text-muted">{c.summary ?? 'Summary appears when the call ends.'}</p></div>
             <div className="shrink-0 space-y-1 text-right text-xs text-faint"><p>{fmtDate(c.started_at, org.timezone)} · {fmtDur(c.duration_seconds)}</p><p className="flex justify-end gap-1"><UrgencyBadge urgency={c.urgency} /><OutcomeBadge outcome={c.outcome} /></p></div>
           </Link>
         ))}

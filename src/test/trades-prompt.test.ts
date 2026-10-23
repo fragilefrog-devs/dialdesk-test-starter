@@ -31,6 +31,9 @@ describe('trades prompt', () => {
     expect(off).toContain('Emergency dispatch is OFF')
     expect(off).not.toContain('transfer the caller to the on-call technician')
   })
+  it('falls back to a message when a transfer is impossible (website calls)', () => {
+    expect(buildSystemPrompt(org, agent)).toContain('take a message with capture_lead instead')
+  })
   it('adds a recording notice only when recording is on', () => {
     expect(buildFirstMessage(org, agent)).toContain('may be recorded')
     expect(buildFirstMessage(org, { ...agent, record_consent_notice: false })).not.toContain('recorded')

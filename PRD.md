@@ -18,6 +18,9 @@ Answer every call 24/7, triage emergencies, book repairs into arrival windows, a
 5. **After hours:** emergencies per the owner's policy; routine work booked for the next open day.
 6. **Spam:** ended politely, not logged.
 
+## Website widget
+A "Talk to us" button for the customer's site: `widget.js` opens an iframe (`/embed/<token>`) that starts a Vapi web call with the same assistant. The page only receives the assistant id when the widget is enabled, the business is active, and the embedding site's referrer is on the business's allowed domains. Calls are labelled "Website visitor" and use plan minutes. Transfers are not possible on web calls, so the assistant takes a message instead.
+
 ## Functional requirements
 - Per-tenant configuration: services, postcodes, arrival windows, jobs per window, office hours, on-call and office numbers, alert phone and email, recording on/off.
 - Booking by arrival window with per-window capacity, race-free.
@@ -26,7 +29,7 @@ Answer every call 24/7, triage emergencies, book repairs into arrival windows, a
 - Billing by plan with included minutes and overage; lapsed accounts stop answering.
 
 ## Out of scope for v1
-Outbound calls, field-service integrations (ServiceTitan, Jobber, Housecall Pro), calendar sync, price quoting, payments by phone, web widget, multi-language beyond the listed options.
+Outbound calls, field-service integrations (ServiceTitan, Jobber, Housecall Pro), calendar sync, price quoting, payments by phone, multi-language beyond the listed options.
 
 ## Success gates
 - 90% of scripted test calls (see `docs/TEST_CALLS.md`) end in the correct outcome.

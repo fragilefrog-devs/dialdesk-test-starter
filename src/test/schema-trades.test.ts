@@ -5,6 +5,13 @@ const read = (p: string) => readFileSync(new URL(`../../${p}`, import.meta.url),
 const schema = read('supabase/schema.sql')
 const migration = read('supabase/migrations/20261023_trades_vapi.sql')
 
+const widgetMigration = read('supabase/migrations/20261024_web_widget.sql')
+describe('widget schema', () => {
+  it('adds the widget columns and a unique token to the schema and the migration', () => {
+    for (const sql of [schema, widgetMigration]) for (const c of ['widget_enabled', 'widget_domains', 'widget_token', 'agents_widget_token_key']) expect(sql).toContain(c)
+  })
+})
+
 describe('trades schema', () => {
   it('replaces the one-job-at-a-time overlap constraint with capacity booking', () => {
     expect(schema).not.toContain('add constraint appointments_no_overlap')

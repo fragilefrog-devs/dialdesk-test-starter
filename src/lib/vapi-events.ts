@@ -15,7 +15,7 @@ async function resolveCall(message: Obj) {
   if (!agent) return null
   const { data: org } = await db.from('organizations').select('plan, subscription_status, trial_ends_at').eq('id', agent.org_id).single()
   await db.from('calls').upsert({
-    org_id: agent.org_id, agent_id: agent.id, channel: 'phone', direction: 'inbound',
+    org_id: agent.org_id, agent_id: agent.id, channel: meta.isWeb ? 'web' : 'phone', direction: 'inbound',
     from_number: meta.callerNumber, to_number: meta.toNumber, provider_sid: meta.providerCallId, status: 'in_progress',
   }, { onConflict: 'provider_sid', ignoreDuplicates: true })
   const { data: call } = await db.from('calls').select('id, outcome').eq('org_id', agent.org_id).eq('provider_sid', meta.providerCallId).maybeSingle()

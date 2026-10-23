@@ -26,7 +26,7 @@ export default async function Onboarding({ searchParams }: { searchParams: Promi
       {error && <Notice kind="error">{error}</Notice>}
       <form action={createOrganization} className="space-y-4 rounded-xl border border-line bg-surface p-6 shadow-card">
         <div><label htmlFor="name" className={label}>Company name</label><input id="name" name="name" required minLength={2} maxLength={80} className={input} placeholder="Alder Street Plumbing" /></div>
-        <div><label htmlFor="slug" className={label}>Web address</label><input id="slug" name="slug" required minLength={3} maxLength={40} pattern="[a-zA-Z0-9\- ]+" className={input} placeholder="alder-street" /><p className="mt-1 text-xs text-faint">Used in your account URL.</p></div>
+        <div><label htmlFor="slug" className={label}>Web address</label><input id="slug" name="slug" required minLength={3} maxLength={40} pattern="[a-zA-Z0-9\- ]+" className={input} placeholder="alder-street" /><p className="mt-1 text-xs text-faint">A short unique name for your workspace.</p></div>
         <div><label htmlFor="industry" className={label}>What do you do?</label><select id="industry" name="industry" className={input}>{TRADES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
         <div><label htmlFor="timezone" className={label}>Time zone</label>
           <select id="timezone" name="timezone" defaultValue="America/Chicago" className={input}>

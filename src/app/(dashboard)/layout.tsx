@@ -8,7 +8,7 @@ import { canTakeCalls } from '@/lib/plans'
 export const dynamic = 'force-dynamic'
 const GROUPS: [string, [string, string, string][]][] = [
   ['Work', [['/dashboard', 'Overview', 'overview'], ['/dashboard/calls', 'Calls', 'calls'], ['/dashboard/leads', 'Messages', 'messages'], ['/dashboard/appointments', 'Jobs', 'jobs']]],
-  ['Setup', [['/dashboard/agent', 'Receptionist', 'receptionist'], ['/dashboard/knowledge', 'Knowledge', 'knowledge'], ['/dashboard/numbers', 'Phone numbers', 'numbers']]],
+  ['Setup', [['/dashboard/agent', 'Receptionist', 'receptionist'], ['/dashboard/knowledge', 'Knowledge', 'knowledge'], ['/dashboard/numbers', 'Phone numbers', 'numbers'], ['/dashboard/install', 'Website widget', 'install']]],
   ['Account', [['/dashboard/team', 'Team', 'team'], ['/dashboard/billing', 'Billing', 'billing']]],
 ]
 

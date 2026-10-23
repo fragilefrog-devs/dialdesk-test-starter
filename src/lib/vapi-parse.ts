@@ -34,6 +34,7 @@ export interface CallMeta {
   assistantId: string | null
   callerNumber: string | null
   toNumber: string | null
+  isWeb: boolean
 }
 
 export function parseCallMeta(message: Obj): CallMeta {
@@ -47,6 +48,7 @@ export function parseCallMeta(message: Obj): CallMeta {
     assistantId: str(call.assistantId) ?? str(assistant.id),
     callerNumber: str(customer.number),
     toNumber: str(phone.number),
+    isWeb: call.type === 'webCall',
   }
 }
 

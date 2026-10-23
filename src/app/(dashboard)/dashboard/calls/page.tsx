@@ -18,7 +18,7 @@ export default async function Calls() {
               <details key={c.id} className="group">
                 <summary className="flex min-h-11 cursor-pointer items-start justify-between gap-4 p-6 transition hover:bg-surface-2">
                   <div className="min-w-0">
-                    <p className="font-medium tabular-nums text-ink">{c.from_number ?? 'Unknown caller'}</p>
+                    <p className="font-medium tabular-nums text-ink">{c.from_number ?? (c.channel === 'web' ? 'Website visitor' : 'Unknown caller')}</p>
                     <p className="mt-1 line-clamp-2 text-sm text-muted">{c.summary ?? 'Summary appears when the call ends.'}</p>
                   </div>
                   <div className="flex shrink-0 items-start gap-4">

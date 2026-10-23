@@ -1,11 +1,11 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, CalendarCheck, CreditCard, Hash, LayoutDashboard, MessageSquare, Mic, Phone, Users, type LucideIcon } from 'lucide-react'
+import { BookOpen, CalendarCheck, CreditCard, Globe, Hash, LayoutDashboard, MessageSquare, Mic, Phone, Users, type LucideIcon } from 'lucide-react'
 
 const ICONS: Record<string, LucideIcon> = {
   overview: LayoutDashboard, calls: Phone, messages: MessageSquare, jobs: CalendarCheck, receptionist: Mic,
-  knowledge: BookOpen, numbers: Hash, team: Users, billing: CreditCard,
+  knowledge: BookOpen, numbers: Hash, install: Globe, team: Users, billing: CreditCard,
 }
 
 export function NavLink({ href, icon, children }: { href: string; icon: string; children: React.ReactNode }) {

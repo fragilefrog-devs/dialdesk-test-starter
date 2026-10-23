@@ -25,5 +25,5 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // Skip static assets and all API routes (webhooks authenticate themselves)
-  matcher: ['/((?!api/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: ['/((?!api/|embed/|widget\\.js|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }

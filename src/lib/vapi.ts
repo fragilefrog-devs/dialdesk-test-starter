@@ -70,6 +70,7 @@ export function buildAssistantPayload(input: AssistantInput) {
       ? { url, credentialId: e.VAPI_SERVER_CREDENTIAL_ID }
       : { url, secret: e.VAPI_WEBHOOK_SECRET },
     serverMessages: ['tool-calls', 'end-of-call-report'],
+    clientMessages: ['transcript'],
     artifactPlan: { recordingEnabled: input.record },
     endCallFunctionEnabled: true,
     maxDurationSeconds: 900,

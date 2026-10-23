@@ -69,8 +69,13 @@ create table if not exists public.agents (
   notify_email text,
   arrival_windows jsonb not null default '[["08:00","12:00"],["12:00","16:00"]]',
   jobs_per_window integer not null default 2 check (jobs_per_window between 1 and 50),
-  emergency_service boolean not null default true
+  emergency_service boolean not null default true,
+  -- Website voice widget (Vapi web calls)
+  widget_enabled boolean not null default false,
+  widget_domains text[] not null default '{}',
+  widget_token text not null default replace(gen_random_uuid()::text, '-', '')
 );
+create unique index if not exists agents_widget_token_key on public.agents(widget_token);
 create index if not exists agents_org_idx on public.agents(org_id);
 
 create table if not exists public.phone_numbers (

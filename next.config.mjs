@@ -68,18 +68,31 @@ const nextConfig = {
     ],
   },
   async headers() {
+    const common = [
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'X-XSS-Protection', value: '1; mode=block' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+    ];
     return [
       {
-        // Security headers on every page/route
-        source: '/:path*',
+        // Everything except the embeddable widget page cannot be framed and never uses the microphone
+        source: '/((?!embed/).*)',
         headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          ...common,
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=()' },
         ],
       },
+      {
+        // The widget page is framed by customer sites (checked per business in the page) and needs the microphone
+        source: '/embed/:path*',
+        headers: [
+          ...common,
+          { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=(self)' },
+          { key: 'Cache-Control', value: 'no-store' },
+        ],
+      },
+      { source: '/widget.js', headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }] },
     ];
   },
 };

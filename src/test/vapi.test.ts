@@ -32,6 +32,7 @@ describe('assistant payload', () => {
     const p = buildAssistantPayload(input)
     expect(p.server).toEqual({ url: 'https://app.example.com/api/vapi/webhook', secret: SECRET })
     expect(p.serverMessages).toEqual(['tool-calls', 'end-of-call-report'])
+    expect(p.clientMessages).toEqual(['transcript'])
     expect(p.artifactPlan.recordingEnabled).toBe(true)
   })
   it('uses a credential id instead of the inline secret when configured', async () => {
@@ -62,7 +63,7 @@ describe('payload parsing', () => {
   })
   it('extracts call metadata', () => {
     expect(parseCallMeta({ call: { id: 'c1', assistantId: 'a1', customer: { number: '+17735550142' } } }))
-      .toEqual({ providerCallId: 'c1', assistantId: 'a1', callerNumber: '+17735550142', toNumber: null })
+      .toEqual({ providerCallId: 'c1', assistantId: 'a1', callerNumber: '+17735550142', toNumber: null, isWeb: false })
   })
   it('maps transcript roles and drops system turns', () => {
     const lines = mapTranscript({ artifact: { messages: [

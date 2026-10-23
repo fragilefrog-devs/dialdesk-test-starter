@@ -8,6 +8,7 @@ DialDesk: a multi-tenant AI phone receptionist for plumbing and HVAC companies. 
 - `src/lib/trades.ts`: pure trades logic (service area, arrival windows, outcomes). Keep it free of I/O so it stays unit-testable.
 - `src/lib/trades-prompt.ts`: the system prompt and transfer destinations. The emergency script and safety rules live here.
 - `src/lib/vapi.ts`, `vapi-parse.ts`, `vapi-sync.ts`, `vapi-events.ts`: Vapi API client, payload parsing, assistant sync, webhook handlers. `src/app/api/vapi/webhook/route.ts` only authenticates and delegates.
+- `src/app/embed/[token]`, `src/components/EmbedVoice.tsx`, `public/widget.js`, `src/lib/widget.ts`: the website voice widget. The embed page must keep checking enabled, active, billing and referer before sending the assistant id to the browser.
 - `supabase/schema.sql` is the full schema; `supabase/migrations/` holds additive changes for existing databases. Update both.
 - `legacy/voice-gateway/`: the retired self-hosted voice path. Nothing in `src/` may import it.
 
