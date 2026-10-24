@@ -19,7 +19,9 @@ Answer every call 24/7, triage emergencies, book repairs into arrival windows, a
 6. **Spam:** ended politely, not logged.
 
 ## Website widget
-A "Talk to us" button for the customer's site: `widget.js` opens an iframe (`/embed/<token>`) that starts a Vapi web call with the same assistant. The page only receives the assistant id when the widget is enabled, the business is active, and the embedding site's referrer is on the business's allowed domains. Calls are labelled "Website visitor" and use plan minutes. Transfers are not possible on web calls, so the assistant takes a message instead.
+A "Talk to us" button for the customer's site: `widget.js` opens an iframe (`/embed/<token>`) that starts a Vapi web call with the same assistant. The page only receives the assistant id when the widget is enabled, the business is active, billing permits calls, and the embedding site's referrer is allowed. The app's own hostname is included automatically; other sites must be listed by the business. Calls are labelled "Website visitor" and use plan minutes. Transfers are not possible on web calls, so the assistant takes a message instead.
+
+Each workspace also has a public business page at `/business/<workspace slug>`, showing its configured services and service hours beside an embedded call window. The call window uses the same widget, billing, activity, and referrer checks as external embeds; when calls are unavailable, the page displays the active business phone number when one is configured.
 
 ## Functional requirements
 - Per-tenant configuration: services, postcodes, arrival windows, jobs per window, office hours, on-call and office numbers, alert phone and email, recording on/off.

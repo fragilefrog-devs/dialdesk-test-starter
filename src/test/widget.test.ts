@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeDomain, parseDomains, refererAllowed, WIDGET_ACCENT_RE, WIDGET_TOKEN_RE } from '@/lib/widget'
+import { domainsWithAppHost, normalizeDomain, parseDomains, refererAllowed, WIDGET_ACCENT_RE, WIDGET_TOKEN_RE } from '@/lib/widget'
 import { parseCallMeta } from '@/lib/vapi-parse'
 
 describe('widget domains', () => {
@@ -13,6 +13,10 @@ describe('widget domains', () => {
   })
   it('parses and de-duplicates lists', () => {
     expect(parseDomains('example.com, https://Example.com/x\nshop.example.org nonsense')).toEqual(['example.com', 'shop.example.org'])
+  })
+  it('includes the app hostname in widget domains by default', () => {
+    expect(domainsWithAppHost('example.com', 'https://app.dialdesk.test/dashboard')).toEqual(['example.com', 'app.dialdesk.test'])
+    expect(domainsWithAppHost('app.dialdesk.test', 'https://app.dialdesk.test')).toEqual(['app.dialdesk.test'])
   })
   it('accepts only six-digit hex colors for the widget accent', () => {
     expect(WIDGET_ACCENT_RE.test('#6657e8')).toBe(true)

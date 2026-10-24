@@ -20,6 +20,13 @@ export function parseDomains(raw: string, max = 20): string[] {
   return [...out]
 }
 
+export function domainsWithAppHost(rawDomains: string, appUrl: string): string[] {
+  const domains = parseDomains(rawDomains)
+  const appHost = new URL(appUrl).hostname.toLowerCase()
+  if (!domains.includes(appHost)) domains.push(appHost)
+  return domains
+}
+
 /** A listed domain covers itself and its subdomains. The app's own host is always allowed (dashboard preview). */
 export function refererAllowed(referer: string | null, allowed: string[], ownHost: string): boolean {
   if (!referer) return false

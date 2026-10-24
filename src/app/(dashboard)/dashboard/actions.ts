@@ -11,7 +11,7 @@ import { cleanWindows, parseList, TIME_RE } from '@/lib/trades'
 import { appEnv } from '@/lib/env'
 import { sendTemplateEmail } from '@/lib/email'
 import { DAY_KEYS } from '@/lib/time'
-import { parseDomains, WIDGET_ACCENT_RE } from '@/lib/widget'
+import { domainsWithAppHost, WIDGET_ACCENT_RE } from '@/lib/widget'
 
 async function adminCtx() {
   const ctx = await requireOrg()
@@ -112,14 +112,13 @@ const widgetAppearanceSchema = z.object({
 export async function saveWidget(fd: FormData) {
   const { supabase, org } = await adminCtx()
   const enabled = fd.get('enabled') === 'on'
-  const domains = parseDomains(String(fd.get('domains') ?? ''))
+  const domains = domainsWithAppHost(String(fd.get('domains') ?? ''), appEnv().NEXT_PUBLIC_APP_URL)
   const appearance = widgetAppearanceSchema.safeParse({
     label: fd.get('label'),
     position: fd.get('position'),
     accent: fd.get('accent'),
   })
   if (!appearance.success) return go('/dashboard/widget-setup', 'error', 'Enter a label and choose a valid accent color and position.')
-  if (enabled && !domains.length) return go('/dashboard/widget-setup', 'error', 'Add at least one website domain, like example.com, or turn the widget off.')
   const { error } = await supabase.from('agents').update({
     widget_enabled: enabled,
     widget_domains: domains,
@@ -129,7 +128,7 @@ export async function saveWidget(fd: FormData) {
   }).eq('org_id', org.id)
   if (error) return go('/dashboard/widget-setup', 'error', 'Could not save.')
   revalidatePath('/dashboard/widget-setup')
-  return go('/dashboard/widget-setup', 'ok', enabled ? 'Widget settings saved. It only loads on your listed sites.' : 'Widget settings saved. The widget is turned off.')
+  return go('/dashboard/widget-setup', 'ok', enabled ? 'Widget settings saved. It loads on your app and listed websites.' : 'Widget settings saved. The widget is turned off.')
 }
 /** Invalidates the old embed snippet, for example if the token leaked onto a site you do not own. */
 export async function rotateWidgetToken() {

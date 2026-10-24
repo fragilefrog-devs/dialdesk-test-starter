@@ -7,6 +7,7 @@ import { CopyButton } from '@/components/CopyButton'
 import { SubmitButton } from '@/components/SubmitButton'
 import { WidgetAppearanceControls } from '@/components/WidgetAppearanceControls'
 import { btn, Card, input, label, Notice, PageHeader } from '@/components/ui'
+import { domainsWithAppHost } from '@/lib/widget'
 export const metadata: Metadata = { title: 'Widget setup' }
 
 const escapeAttribute = (value: string) =>
@@ -34,6 +35,7 @@ export default async function WidgetSetup({ searchParams }: { searchParams: Prom
   const widgetLabel = a.widget_label || 'Talk to us'
   const widgetPosition = a.widget_position === 'left' ? 'left' : 'right'
   const widgetAccent = /^#[0-9a-fA-F]{6}$/.test(a.widget_accent) ? a.widget_accent : '#6657e8'
+  const allowedDomains = domainsWithAppHost(((a.widget_domains as string[] | null) ?? []).join('\n'), app)
   const snippet = tokenMissing ? '' : `<script src="${app}/widget.js" data-token="${a.widget_token}" data-label="${escapeAttribute(widgetLabel)}" data-position="${widgetPosition}" data-accent="${widgetAccent}" async></script>`
   const ro = role === 'member'
   const keyMissing = !process.env.VAPI_PUBLIC_KEY
@@ -44,6 +46,7 @@ export default async function WidgetSetup({ searchParams }: { searchParams: Prom
       <PageHeader
         title="Website voice widget"
         sub="Preview and configure the voice button customers use on your website."
+        action={<Link href={`/business/${org.slug}`} target="_blank" rel="noreferrer" className={btn.secondary}>View public business page</Link>}
       />
       {error && <Notice kind="error">{error}</Notice>}
       {ok && <Notice kind="success">{ok}</Notice>}
@@ -68,8 +71,8 @@ export default async function WidgetSetup({ searchParams }: { searchParams: Prom
               </label>
               <div>
                 <label htmlFor="domains" className={label}>Allowed websites</label>
-                <textarea id="domains" name="domains" rows={2} defaultValue={((a.widget_domains as string[] | null) ?? []).join('\n')} className={input} placeholder="alderstreetplumbing.com" />
-                <p className="mt-2 text-xs text-faint">One domain per line. Subdomains are included. The widget stays hidden on other sites.</p>
+                <textarea id="domains" name="domains" rows={2} defaultValue={allowedDomains.join('\n')} className={input} placeholder="alderstreetplumbing.com" />
+                <p className="mt-2 text-xs text-faint">Your DialDesk app domain is included automatically. Add one domain per line for other sites; subdomains are included.</p>
               </div>
             </fieldset>
             {!ro && <SubmitButton className={`${btn.primary} mt-5`}>Save widget settings</SubmitButton>}
