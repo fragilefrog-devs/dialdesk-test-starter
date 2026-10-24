@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { AudioLines, Mic, MicOff, Phone, PhoneOff, RotateCcw, X } from 'lucide-react'
 import { BrandMark } from '@/components/marketing'
+import { widgetCallErrorMessage } from '@/lib/widget-call-error'
 import { btn } from './ui'
 
 type Phase = 'idle' | 'connecting' | 'live' | 'ended' | 'error'
@@ -114,18 +115,15 @@ export function EmbedVoice({ publicKey, assistantId, businessName, accent, onClo
           ].slice(-8))
         }
       }) as never)
-      instance.on('error', (() => {
-        setError('The call could not continue. Please try again.')
+      instance.on('error', ((cause: unknown) => {
+        setError(widgetCallErrorMessage(cause))
         setPhase('error')
         setSpeaking(false)
         setLevel(0)
       }) as never)
       await instance.start(assistantId)
     } catch (cause) {
-      const denied = cause instanceof Error && /permission|denied|notallowed/i.test(`${cause.name} ${cause.message}`)
-      setError(denied
-        ? 'Microphone access is blocked. Allow it in your browser settings, then try again.'
-        : 'Could not start the call. Please try again.')
+      setError(widgetCallErrorMessage(cause))
       setPhase('error')
     }
   }, [publicKey, assistantId])

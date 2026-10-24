@@ -75,12 +75,20 @@ const nextConfig = {
     ];
     return [
       {
-        // Everything except the embeddable widget page cannot be framed and never uses the microphone
-        source: '/((?!embed/).*)',
+        // Public business pages host the same-origin call iframe and need to delegate the microphone.
+        source: '/((?!embed/|business/).*)',
         headers: [
           ...common,
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
           { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=()' },
+        ],
+      },
+      {
+        source: '/business/:path*',
+        headers: [
+          ...common,
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=(self)' },
         ],
       },
       {

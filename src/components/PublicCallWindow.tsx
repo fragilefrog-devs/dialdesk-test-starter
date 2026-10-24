@@ -3,6 +3,11 @@
 import { useEffect, useState } from 'react'
 import { PhoneCall } from 'lucide-react'
 
+const callWindowStyle = {
+  width: 'min(100%, 380px, calc(56.25dvh - 36px))',
+  aspectRatio: '9 / 16',
+}
+
 export function PublicCallWindow({ src, businessName }: { src: string; businessName: string }) {
   const [open, setOpen] = useState(true)
 
@@ -25,8 +30,8 @@ export function PublicCallWindow({ src, businessName }: { src: string; businessN
 
   if (!open) {
     return (
-      <div className="grid min-h-[480px] place-items-center rounded-[15px] border border-line bg-surface p-6 text-center shadow-card">
-        <div>
+      <div className="mx-auto grid place-items-center rounded-[15px] border border-line bg-surface p-5 text-center shadow-card" style={callWindowStyle}>
+        <div className="max-w-[260px]">
           <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-surface-2 text-primary">
             <PhoneCall className="size-6" aria-hidden />
           </div>
@@ -41,12 +46,14 @@ export function PublicCallWindow({ src, businessName }: { src: string; businessN
   }
 
   return (
-    <iframe
-      title={`Voice call with ${businessName}`}
-      src={src}
-      allow="microphone"
-      referrerPolicy="strict-origin-when-cross-origin"
-      className="h-[600px] w-full rounded-[15px] border border-line bg-canvas shadow-card sm:h-[640px]"
-    />
+    <div className="relative mx-auto overflow-hidden rounded-[15px] border border-line bg-canvas shadow-card" style={callWindowStyle}>
+      <iframe
+        title={`Voice call with ${businessName}`}
+        src={src}
+        allow="microphone"
+        referrerPolicy="strict-origin-when-cross-origin"
+        className="absolute inset-0 size-full"
+      />
+    </div>
   )
 }
