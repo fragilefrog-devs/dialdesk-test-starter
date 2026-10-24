@@ -407,3 +407,5 @@ revoke all on function public.book_trade_job(uuid,uuid,uuid,text,timestamptz,tim
   from public, anon, authenticated;
 grant execute on function public.book_trade_job(uuid,uuid,uuid,text,timestamptz,timestamptz,integer,text,text,text,text,text,timestamptz)
   to service_role;
+
+notify pgrst, 'reload schema';

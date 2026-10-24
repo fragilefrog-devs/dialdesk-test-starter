@@ -4,7 +4,7 @@ One deployable: the Next.js app (Vercel works). Managed services: Supabase, Vapi
 
 ## 1. Supabase
 1. Create a project near your callers.
-2. SQL editor: run `supabase/schema.sql` (new project) or the files in `supabase/migrations/` in order (existing project).
+2. SQL editor: run `supabase/schema.sql` (new project) or the files in `supabase/migrations/` in order (existing project). If booking reports that `book_trade_job` cannot be found after updating the database, run `NOTIFY pgrst, 'reload schema';` in the SQL editor so the REST API refreshes its function signature cache.
 3. Auth: Site URL = your app URL; add `<app>/auth/callback`; keep email confirmation on; set custom SMTP using your Resend SMTP credentials.
 4. Copy the templates in `supabase/templates/auth/` into the matching Supabase Dashboard > Authentication > Email Templates and Security and Protection > Notifications settings. `supabase/config.toml` configures the same templates for local Supabase CLI development; it does not push hosted Auth settings.
 5. Enable backups before onboarding paying customers.

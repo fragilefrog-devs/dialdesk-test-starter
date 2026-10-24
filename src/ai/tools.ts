@@ -125,6 +125,13 @@ async function upsertContact(orgId: string, name: string, phone: string, email?:
   return data?.id as string | undefined
 }
 
+function isMissingBookingRpcSignature(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const detail = error as { code?: unknown; message?: unknown; details?: unknown }
+  const message = [detail.message, detail.details].filter((part): part is string => typeof part === 'string').join(' ')
+  return ['PGRST202', '42883'].includes(String(detail.code)) && message.includes('book_trade_job')
+}
+
 /** Keeps the strongest outcome seen on the call (an emergency is never downgraded by a later lead). */
 async function markCall(ctx: ToolCtx, outcome: Outcome, urgency?: Urgency | null) {
   const db = supabaseAdmin()
@@ -209,12 +216,25 @@ export async function executeTool(ctx: ToolCtx, name: string, args: Args): Promi
         const service = str(args.service, 120) || null
         const contactId = await upsertContact(ctx.orgId, name, phoneRaw)
         const emailConsentAt = emailConsent.email ? new Date().toISOString() : null
-        const { data, error } = await db.rpc('book_trade_job', {
+        const rpcArgs = {
           p_org: ctx.orgId, p_call: ctx.callId, p_contact: contactId ?? null, p_service: service,
           p_starts: slot.startsAt.toISOString(), p_ends: slot.endsAt.toISOString(), p_capacity: agent.jobs_per_window,
           p_address: address, p_zip: postcode, p_issue: issue, p_urgency: urgency, p_notes: str(args.notes, 500) || null,
-          p_email_confirmation_consented_at: emailConsentAt,
+        }
+        let { data, error } = await db.rpc('book_trade_job', {
+          ...rpcArgs, p_email_confirmation_consented_at: emailConsentAt,
         })
+        let consentRecordedByBookingRpc = !error
+        if (error && isMissingBookingRpcSignature(error)) {
+          console.warn('[tool] book_trade_job signature is outdated; retrying the installed signature', {
+            organizationId: ctx.orgId,
+            code: error.code,
+          })
+          const legacyResult = await db.rpc('book_trade_job', rpcArgs)
+          data = legacyResult.data
+          error = legacyResult.error
+          consentRecordedByBookingRpc = false
+        }
         const row = Array.isArray(data) ? data[0] : data
         if (error || !row) {
           if (error) console.error('[tool] book_job database booking failed', { organizationId: ctx.orgId, error })
@@ -225,7 +245,26 @@ export async function executeTool(ctx: ToolCtx, name: string, args: Args): Promi
           console.error('[tool] book_job returned an unexpected booking status', { organizationId: ctx.orgId, status: row.out_status })
           return { error: 'Could not confirm that booking. Offer another available window or ask permission to take a callback message.' }
         }
-        if (emailConsent.email) {
+        let emailConsentRecorded = consentRecordedByBookingRpc
+        if (emailConsent.email && !consentRecordedByBookingRpc) {
+          if (typeof row.out_id === 'string') {
+            const { data: consentRow, error: consentError } = await db.from('appointments')
+              .update({ email_confirmation_consented_at: emailConsentAt })
+              .eq('org_id', ctx.orgId).eq('id', row.out_id).select('id').maybeSingle()
+            emailConsentRecorded = !consentError && !!consentRow
+            if (!emailConsentRecorded) {
+              console.error('[booking-email] Could not persist caller consent for the booking', {
+                organizationId: ctx.orgId, appointmentId: row.out_id, error: consentError,
+              })
+            }
+          } else {
+            emailConsentRecorded = false
+            console.error('[booking-email] Cannot persist caller consent because the booking ID was missing', {
+              organizationId: ctx.orgId,
+            })
+          }
+        }
+        if (emailConsent.email && emailConsentRecorded) {
           try {
             await upsertContact(ctx.orgId, name, phoneRaw, emailConsent.email)
           } catch (error) {
@@ -242,12 +281,12 @@ export async function executeTool(ctx: ToolCtx, name: string, args: Args): Promi
           const to = toE164(phoneRaw, ctx.callerNumber)
           if (to) await sendSms(to, `${org.name}: you're booked for ${when}. A technician will arrive within that window. Reply to this number if you need to change it.`)
         })
-        const emailSent = emailConsent.email
+        const emailSent = emailConsent.email && emailConsentRecorded
           ? await sendTemplateEmail(emailConsent.email, {
               kind: 'booking-confirmation', organizationName: org.name, callerName: name, callbackNumber: phoneRaw,
               address, postcode, issue, service, date: m[1], arrivalWindow: slot.label, timezone: org.timezone,
             })
-          : null
+          : emailConsent.email ? false : null
         const tellCaller = emailSent === true
           ? `Your booking is confirmed for ${slot.label} on ${m[1]}. An email confirmation was submitted to ${emailConsent.email}.`
           : emailSent === false

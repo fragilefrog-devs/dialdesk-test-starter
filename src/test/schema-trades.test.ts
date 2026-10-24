@@ -37,6 +37,8 @@ describe('trades schema', () => {
     it('keeps the updated booking function service-role only', () => {
       expect(emailMigration).toMatch(/revoke all on function public\.book_trade_job\([\s\S]*from public, anon, authenticated/i)
       expect(emailMigration).toMatch(/grant execute on function public\.book_trade_job\([\s\S]*to service_role/i)
+      expect(emailMigration).toContain("notify pgrst, 'reload schema'")
+      expect(schema).toContain("notify pgrst, 'reload schema'")
     })
   })
   it('keeps booking and finalization service-role only', () => {
