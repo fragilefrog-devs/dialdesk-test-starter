@@ -6,9 +6,11 @@ const schema = read('supabase/schema.sql')
 const migration = read('supabase/migrations/20261023_trades_vapi.sql')
 
 const widgetMigration = read('supabase/migrations/20261024_web_widget.sql')
+const widgetAppearanceMigration = read('supabase/migrations/20261024145100_widget_appearance.sql')
 describe('widget schema', () => {
   it('adds the widget columns and a unique token to the schema and the migration', () => {
     for (const sql of [schema, widgetMigration]) for (const c of ['widget_enabled', 'widget_domains', 'widget_token', 'agents_widget_token_key']) expect(sql).toContain(c)
+    for (const sql of [schema, widgetAppearanceMigration]) for (const c of ['widget_label', 'widget_position', 'widget_accent']) expect(sql).toContain(c)
   })
 })
 

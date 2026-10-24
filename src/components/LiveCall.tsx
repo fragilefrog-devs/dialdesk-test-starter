@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react'
 const formatDuration = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
 
-export function Waveform({ bars = 24, className = '' }: { bars?: number; className?: string }) {
+export function Waveform({ bars = 24, className = '', color }: { bars?: number; className?: string; color?: string }) {
   return (
-    <div aria-hidden className={`wave flex h-8 items-center gap-1 text-primary ${className}`}>
+    <div aria-hidden className={`wave flex h-8 items-center gap-1 text-primary ${className}`} style={color ? { color } : undefined}>
       {Array.from({ length: bars }, (_, index) => (
         <i
           key={index}

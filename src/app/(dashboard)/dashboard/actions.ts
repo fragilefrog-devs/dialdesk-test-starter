@@ -10,7 +10,7 @@ import { syncAgent } from '@/lib/vapi-sync'
 import { cleanWindows, parseList, TIME_RE } from '@/lib/trades'
 import { sendEmail, escapeHtml } from '@/lib/email'
 import { DAY_KEYS } from '@/lib/time'
-import { parseDomains } from '@/lib/widget'
+import { parseDomains, WIDGET_ACCENT_RE } from '@/lib/widget'
 
 async function adminCtx() {
   const ctx = await requireOrg()
@@ -64,22 +64,40 @@ export async function saveAgent(fd: FormData) {
 }
 
 // ── Website widget ──
+const widgetAppearanceSchema = z.object({
+  label: z.string().trim().min(1).max(32),
+  position: z.enum(['left', 'right']),
+  accent: z.string().regex(WIDGET_ACCENT_RE, 'Choose a valid six-digit hex color.'),
+})
+
 export async function saveWidget(fd: FormData) {
   const { supabase, org } = await adminCtx()
   const enabled = fd.get('enabled') === 'on'
   const domains = parseDomains(String(fd.get('domains') ?? ''))
-  if (enabled && !domains.length) return go('/dashboard/install', 'error', 'Add at least one website domain, like example.com, or turn the widget off.')
-  const { error } = await supabase.from('agents').update({ widget_enabled: enabled, widget_domains: domains }).eq('org_id', org.id)
-  if (error) return go('/dashboard/install', 'error', 'Could not save.')
-  revalidatePath('/dashboard/install')
-  return go('/dashboard/install', 'ok', enabled ? 'Widget saved. It only loads on the sites you listed.' : 'Widget turned off.')
+  const appearance = widgetAppearanceSchema.safeParse({
+    label: fd.get('label'),
+    position: fd.get('position'),
+    accent: fd.get('accent'),
+  })
+  if (!appearance.success) return go('/dashboard/widget-setup', 'error', 'Enter a label and choose a valid accent color and position.')
+  if (enabled && !domains.length) return go('/dashboard/widget-setup', 'error', 'Add at least one website domain, like example.com, or turn the widget off.')
+  const { error } = await supabase.from('agents').update({
+    widget_enabled: enabled,
+    widget_domains: domains,
+    widget_label: appearance.data.label,
+    widget_position: appearance.data.position,
+    widget_accent: appearance.data.accent.toLowerCase(),
+  }).eq('org_id', org.id)
+  if (error) return go('/dashboard/widget-setup', 'error', 'Could not save.')
+  revalidatePath('/dashboard/widget-setup')
+  return go('/dashboard/widget-setup', 'ok', enabled ? 'Widget settings saved. It only loads on your listed sites.' : 'Widget settings saved. The widget is turned off.')
 }
 /** Invalidates the old embed snippet, for example if the token leaked onto a site you do not own. */
 export async function rotateWidgetToken() {
   const { supabase, org } = await adminCtx()
   await supabase.from('agents').update({ widget_token: crypto.randomUUID().replace(/-/g, '') }).eq('org_id', org.id)
-  revalidatePath('/dashboard/install')
-  return go('/dashboard/install', 'ok', 'New embed code created. Update the snippet on your site.')
+  revalidatePath('/dashboard/widget-setup')
+  return go('/dashboard/widget-setup', 'ok', 'New embed code created. Update the snippet on your site.')
 }
 
 // ── Knowledge ──

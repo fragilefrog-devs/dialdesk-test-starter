@@ -1,6 +1,7 @@
 /** Pure helpers for the website widget: which sites may embed a business's voice assistant. */
 
 const HOST_RE = /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/
+export const WIDGET_ACCENT_RE = /^#[0-9a-fA-F]{6}$/
 
 /** "https://www.Example.com:8080/page" -> "www.example.com". Returns null for anything that is not a hostname. */
 export function normalizeDomain(raw: string): string | null {

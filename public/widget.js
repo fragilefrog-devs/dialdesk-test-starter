@@ -1,5 +1,5 @@
 /*! DialDesk website voice widget. Usage: <script src="https://YOUR-APP/widget.js" data-token="TOKEN" async></script>
-    Optional: data-label="Talk to us"  data-position="left|right" */
+    Optional: data-label="Talk to us"  data-position="left|right"  data-accent="#6657e8" */
 (function () {
   if (window.__dialdeskWidget) return;
   window.__dialdeskWidget = true;
@@ -10,11 +10,19 @@
   var base = new URL(s.src).origin;
   var label = s.getAttribute('data-label') || 'Talk to us';
   var left = s.getAttribute('data-position') === 'left';
+  var accent = s.getAttribute('data-accent') || '#6657e8';
+  if (!/^#[0-9a-f]{6}$/i.test(accent)) accent = '#6657e8';
+  var channels = accent.slice(1).match(/[0-9a-f]{2}/gi).map(function (channel) {
+    var value = parseInt(channel, 16) / 255;
+    return value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+  });
+  var accentForeground = (0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]) > 0.179 ? '#000000' : '#ffffff';
 
   var css = '.dd-btn,.dd-panel{position:fixed;bottom:16px;' + (left ? 'left' : 'right') + ':16px;z-index:2147483000;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}' +
-    '.dd-btn{min-height:48px;padding:0 20px;border:0;border-radius:10px;background:#6657e8;color:#fff;font-size:16px;font-weight:600;cursor:pointer;box-shadow:0 6px 16px rgba(34,31,79,.14)}' +
-    '.dd-btn:hover{background:#5546d6}.dd-btn:focus-visible,.dd-x:focus-visible{outline:2px solid #6657e8;outline-offset:2px}' +
-    '.dd-panel{display:none;flex-direction:column;width:360px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 32px);background:#fff;border:1px solid #e9ebf2;border-radius:15px;overflow:hidden;box-shadow:0 12px 32px rgba(34,31,79,.12)}' +
+    '.dd-btn,.dd-x{--dd-accent:' + accent + ';--dd-accent-foreground:' + accentForeground + '}' +
+    '.dd-btn{max-width:calc(100vw - 32px);min-height:48px;padding:0 20px;overflow:hidden;border:0;border-radius:10px;background:var(--dd-accent);color:var(--dd-accent-foreground);font-size:20px;font-weight:700;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;box-shadow:0 6px 16px rgba(34,31,79,.14)}' +
+    '.dd-btn:hover{background:color-mix(in srgb,var(--dd-accent) 88%,black)}.dd-btn:focus-visible,.dd-x:focus-visible{outline:2px solid var(--dd-accent);outline-offset:2px}' +
+    '.dd-panel{display:none;flex-direction:column;width:360px;max-width:calc(100vw - 32px);height:560px;max-height:calc(100vh - 32px);background:#fff;border:1px solid #e9ebf2;border-radius:15px;overflow:hidden;box-shadow:0 12px 32px rgba(34,31,79,.12)}' +
     '.dd-panel[data-open="true"]{display:flex;animation:dd-in .2s cubic-bezier(.16,1,.3,1)}' +
     '.dd-bar{display:flex;justify-content:flex-end;padding:4px;background:#fff}' +
     '.dd-x{min-height:44px;padding:0 12px;border:0;background:transparent;color:#626980;font-size:14px;cursor:pointer;border-radius:10px}' +
@@ -43,7 +51,7 @@
       frame = document.createElement('iframe');
       frame.className = 'dd-frame'; frame.title = 'Voice assistant';
       frame.setAttribute('allow', 'microphone'); frame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-      frame.src = base + '/embed/' + token;
+      frame.src = base + '/embed/' + token + '?accent=' + encodeURIComponent(accent);
       panel.appendChild(frame);
     }
     // Closing destroys the frame, which ends any call in progress.

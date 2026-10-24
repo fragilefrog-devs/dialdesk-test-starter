@@ -2,6 +2,11 @@
 export type NavItem = { href: string; label: string; icon: string }
 export type NavGroup = { group: string; items: NavItem[] }
 
+export const PROFILE_LINKS: NavItem[] = [
+  { href: '/dashboard/billing', label: 'Billing', icon: 'billing' },
+  { href: '/dashboard/widget-setup', label: 'Widget setup', icon: 'guide' },
+]
+
 export const NAV_GROUPS: NavGroup[] = [
   {
     group: 'Workspace',
@@ -18,15 +23,20 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: '/dashboard/agent', label: 'Receptionist', icon: 'receptionist' },
       { href: '/dashboard/knowledge', label: 'Knowledge', icon: 'knowledge' },
       { href: '/dashboard/numbers', label: 'Phone numbers', icon: 'numbers' },
-      { href: '/dashboard/install', label: 'Website widget', icon: 'install' },
+      { href: '/dashboard/widget-setup', label: 'Widget setup', icon: 'install' },
       { href: '/dashboard/team', label: 'Team', icon: 'team' },
-      { href: '/dashboard/billing', label: 'Billing', icon: 'billing' },
     ],
   },
 ]
 
-export const allNav = (): (NavItem & { group: string })[] =>
-  NAV_GROUPS.flatMap(({ group, items }) => items.map((item) => ({ ...item, group })))
+export const allNav = (): (NavItem & { group: string })[] => {
+  const navItems = NAV_GROUPS.flatMap(({ group, items }) => items.map((item) => ({ ...item, group })))
+  const navHrefs = new Set(navItems.map(({ href }) => href))
+  const accountItems = PROFILE_LINKS
+    .filter(({ href }) => !navHrefs.has(href))
+    .map((item) => ({ ...item, group: 'Account' }))
+  return [...navItems, ...accountItems]
+}
 
 export function filterNav(query: string) {
   const normalized = query.trim().toLowerCase()

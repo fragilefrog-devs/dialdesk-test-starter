@@ -73,7 +73,10 @@ create table if not exists public.agents (
   -- Website voice widget (Vapi web calls)
   widget_enabled boolean not null default false,
   widget_domains text[] not null default '{}',
-  widget_token text not null default replace(gen_random_uuid()::text, '-', '')
+  widget_token text not null default replace(gen_random_uuid()::text, '-', ''),
+  widget_label text not null default 'Talk to us',
+  widget_position text not null default 'right' check (widget_position in ('left', 'right')),
+  widget_accent text not null default '#6657e8' check (widget_accent ~ '^#[0-9A-Fa-F]{6}$')
 );
 create unique index if not exists agents_widget_token_key on public.agents(widget_token);
 create index if not exists agents_org_idx on public.agents(org_id);

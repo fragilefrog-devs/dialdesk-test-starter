@@ -8,7 +8,7 @@ DialDesk: a multi-tenant AI phone receptionist for plumbing and HVAC companies. 
 - `src/lib/trades.ts`: pure trades logic (service area, arrival windows, outcomes). Keep it free of I/O so it stays unit-testable.
 - `src/lib/trades-prompt.ts`: the system prompt and transfer destinations. The emergency script and safety rules live here.
 - `src/lib/vapi.ts`, `vapi-parse.ts`, `vapi-sync.ts`, `vapi-events.ts`: Vapi API client, payload parsing, assistant sync, webhook handlers. `src/app/api/vapi/webhook/route.ts` only authenticates and delegates.
-- `src/app/embed/[token]`, `src/components/EmbedVoice.tsx`, `public/widget.js`, `src/lib/widget.ts`: the website voice widget. The embed page must keep checking enabled, active, billing and referer before sending the assistant id to the browser.
+- `src/app/(dashboard)/dashboard/widget-setup`, `src/app/embed/[token]`, `src/components/EmbedVoice.tsx`, `public/widget.js`, `src/lib/widget.ts`: the website voice widget. The embed page must keep checking enabled, active, billing and referer before sending the assistant id to the browser.
 - `src/app/api/billing/checkout`, `portal`, `confirm`, `src/app/api/webhooks/stripe/route.ts`, and `src/lib/billing-sync.ts`: Stripe checkout/portal, verified plan confirmation, subscription persistence, and webhook reconciliation. `src/components/BillingConfirmation.tsx` refreshes the billing UI after backend confirmation.
 - `src/components/DashboardChrome.tsx`: shared dashboard shell and mobile navigation drawer. `src/components/marketing.tsx` owns the reusable `BrandMark` and `Wordmark`; `public/dialdesk-mark.svg` is the shared app icon.
 - `supabase/schema.sql` is the full schema; `supabase/migrations/` holds additive changes for existing databases. Update both.

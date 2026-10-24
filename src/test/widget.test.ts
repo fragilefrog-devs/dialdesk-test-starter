@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeDomain, parseDomains, refererAllowed, WIDGET_TOKEN_RE } from '@/lib/widget'
+import { normalizeDomain, parseDomains, refererAllowed, WIDGET_ACCENT_RE, WIDGET_TOKEN_RE } from '@/lib/widget'
 import { parseCallMeta } from '@/lib/vapi-parse'
 
 describe('widget domains', () => {
@@ -14,6 +14,13 @@ describe('widget domains', () => {
   it('parses and de-duplicates lists', () => {
     expect(parseDomains('example.com, https://Example.com/x\nshop.example.org nonsense')).toEqual(['example.com', 'shop.example.org'])
   })
+  it('accepts only six-digit hex colors for the widget accent', () => {
+    expect(WIDGET_ACCENT_RE.test('#6657e8')).toBe(true)
+    expect(WIDGET_ACCENT_RE.test('#FFFFFF')).toBe(true)
+    expect(WIDGET_ACCENT_RE.test('red')).toBe(false)
+    expect(WIDGET_ACCENT_RE.test('#abc')).toBe(false)
+    expect(WIDGET_ACCENT_RE.test('#123456; color: red')).toBe(false)
+  })
 })
 
 describe('referer check', () => {
@@ -23,7 +30,7 @@ describe('referer check', () => {
     expect(refererAllowed('https://www.example.com/page', allowed, 'app.dialdesk.test')).toBe(true)
   })
   it('allows the app itself for the dashboard preview', () => {
-    expect(refererAllowed('https://app.dialdesk.test/dashboard/install', [], 'app.dialdesk.test')).toBe(true)
+    expect(refererAllowed('https://app.dialdesk.test/dashboard/widget-setup', [], 'app.dialdesk.test')).toBe(true)
   })
   it('blocks other sites, look-alikes, missing and malformed referers', () => {
     expect(refererAllowed('https://evil.com/', allowed, 'app.dialdesk.test')).toBe(false)

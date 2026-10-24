@@ -1,15 +1,36 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LogOut, Menu, X } from 'lucide-react'
+import { ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
 import { signOut } from '@/app/(auth)/actions'
 import { CommandPalette } from '@/components/CommandPalette'
-import { NavLink } from '@/components/NavLink'
+import { NAV_ICONS, NavLink } from '@/components/NavLink'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { BrandMark } from '@/components/marketing'
-import { NAV_GROUPS, allNav } from '@/lib/nav'
+import { NAV_GROUPS, PROFILE_LINKS, allNav } from '@/lib/nav'
+
+const SIDEBAR_STORAGE_KEY = 'dd-sidebar-collapsed'
+let sidebarCollapsedFallback = false
+const subscribeSidebar = (callback: () => void) => {
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === SIDEBAR_STORAGE_KEY || event.key === null) callback()
+  }
+  window.addEventListener('storage', onStorage)
+  window.addEventListener('dd-sidebar', callback)
+  return () => {
+    window.removeEventListener('storage', onStorage)
+    window.removeEventListener('dd-sidebar', callback)
+  }
+}
+const readSidebarCollapsed = () => {
+  try {
+    return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true'
+  } catch {
+    return sidebarCollapsedFallback
+  }
+}
 
 export function DashboardChrome({
   children,
@@ -25,8 +46,12 @@ export function DashboardChrome({
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const sidebarCollapsed = useSyncExternalStore(subscribeSidebar, readSidebarCollapsed, () => false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const sidebarRef = useRef<HTMLElement>(null)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
+  const profileButtonRef = useRef<HTMLButtonElement>(null)
   const initials = userEmail.split('@')[0].split(/[._-]/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('')
   const activePage = allNav()
     .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
@@ -78,9 +103,40 @@ export function DashboardChrome({
     }
   }, [isMobile, menuOpen])
 
+  useEffect(() => {
+    if (!profileOpen) return
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (event.target instanceof Node && !profileMenuRef.current?.contains(event.target)) {
+        setProfileOpen(false)
+      }
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setProfileOpen(false)
+        profileButtonRef.current?.focus()
+      }
+    }
+    document.addEventListener('pointerdown', closeOnOutsidePointer)
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointer)
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [profileOpen])
+
   const closeNavigation = () => {
     setMenuOpen(false)
     if (isMobile) menuButtonRef.current?.focus()
+  }
+
+  const toggleSidebar = () => {
+    sidebarCollapsedFallback = !sidebarCollapsed
+    try {
+      window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(sidebarCollapsedFallback))
+    } catch {
+      // Keep the preference for this render even when storage is unavailable.
+    }
+    window.dispatchEvent(new Event('dd-sidebar'))
   }
 
   return (
@@ -106,13 +162,13 @@ export function DashboardChrome({
         aria-hidden={isMobile && !menuOpen}
         aria-modal={isMobile && menuOpen ? true : undefined}
         inert={isMobile && !menuOpen}
-        className={`fixed inset-y-0 left-0 z-40 flex w-[min(290px,84vw)] -translate-x-full flex-col overflow-y-auto border-r border-line bg-surface px-3 py-5 transition-transform duration-200 ease-out motion-reduce:transition-none md:w-[238px] md:translate-x-0 ${menuOpen ? 'translate-x-0' : ''}`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-[min(290px,84vw)] -translate-x-full flex-col overflow-y-auto border-r border-line bg-surface px-3 py-4 transition-[width,transform,padding] duration-200 ease-out motion-reduce:transition-none md:translate-x-0 ${sidebarCollapsed ? 'md:w-[72px] md:px-2' : 'md:w-[238px]'} ${menuOpen ? 'translate-x-0' : ''}`}
       >
-        <div className="px-2">
-          <div className="flex items-center justify-between pb-5">
-            <Link href="/dashboard" onClick={closeNavigation} className="flex items-center gap-2.5 px-2 font-display text-xl font-extrabold tracking-tight text-ink">
+        <div className={sidebarCollapsed ? 'md:px-0' : 'px-2'}>
+          <div className={`flex items-center justify-between pb-4 ${sidebarCollapsed ? 'md:justify-center' : ''}`}>
+            <Link href="/dashboard" aria-label="DialDesk overview" onClick={closeNavigation} className={`flex items-center gap-2.5 px-2 font-display text-xl font-extrabold tracking-tight text-ink ${sidebarCollapsed ? 'md:px-0' : ''}`}>
               <BrandMark />
-              DialDesk
+              <span className={sidebarCollapsed ? 'md:hidden' : ''}>DialDesk</span>
             </Link>
             <button
               type="button"
@@ -123,54 +179,37 @@ export function DashboardChrome({
               <X className="h-4 w-4" aria-hidden />
             </button>
           </div>
-          <div className="mb-4 flex items-center gap-3 rounded-xl border border-line bg-canvas p-2.5">
+          <div
+            title={sidebarCollapsed ? orgName : undefined}
+            className={`mb-3 flex min-h-12 items-center gap-3 rounded-xl border border-line bg-canvas p-2 ${sidebarCollapsed ? 'md:justify-center md:px-1' : ''}`}
+          >
             <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-2 text-sm font-bold text-primary">
               {orgName.slice(0, 1).toUpperCase()}
             </span>
-            <span className="min-w-0">
+            <span className={`min-w-0 ${sidebarCollapsed ? 'md:sr-only' : ''}`}>
               <span className="block truncate text-sm font-semibold text-ink">{orgName}</span>
-              <span className="mt-0.5 block text-xs text-muted">Business workspace</span>
+              <span className="mt-0.5 block truncate text-xs text-muted">Business workspace</span>
             </span>
           </div>
         </div>
 
-        <nav aria-label="Dashboard" className="space-y-5 px-1">
+        <nav aria-label="Dashboard" className="flex flex-col gap-4 px-1">
           {NAV_GROUPS.map(({ group, items }) => (
             <div key={group}>
-              <p className="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-faint">{group}</p>
-              <div className="space-y-0.5">
+              <p className={`px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-faint ${sidebarCollapsed ? 'md:hidden' : ''}`}>{group}</p>
+              <div className="flex flex-col gap-0.5">
                 {items.map((item) => (
-                  <NavLink key={item.href} href={item.href} icon={item.icon} onNavigate={closeNavigation}>{item.label}</NavLink>
+                  <NavLink key={item.href} href={item.href} icon={item.icon} onNavigate={closeNavigation} collapsed={sidebarCollapsed}>{item.label}</NavLink>
                 ))}
               </div>
             </div>
           ))}
-          {isPlatformAdmin && <NavLink href="/admin" icon="admin" onNavigate={closeNavigation}>Platform admin</NavLink>}
+          {isPlatformAdmin && <NavLink href="/admin" icon="admin" onNavigate={closeNavigation} collapsed={sidebarCollapsed}>Platform admin</NavLink>}
         </nav>
-
-        <div className="mt-4 border-t border-line pt-3">
-          <Link href="/dashboard/install" onClick={closeNavigation} className="mb-3 block rounded-xl border border-line bg-surface-2 p-3 transition hover:border-primary/30">
-            <span className="text-sm font-semibold text-ink">Need a hand?</span>
-            <span className="mt-1 block text-xs leading-relaxed text-muted">Use the setup guide to get your receptionist ready.</span>
-            <span className="mt-2 block text-sm font-semibold text-primary">Open setup guide</span>
-          </Link>
-          <div className="flex items-center gap-2.5 border-t border-line px-1 pt-3">
-            <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-2 text-sm font-bold text-primary">{initials || '?'}</span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-ink">{userEmail}</span>
-              <span className="mt-0.5 block text-xs text-muted">{isPlatformAdmin ? 'Platform admin' : 'Workspace member'}</span>
-            </span>
-            <form action={signOut}>
-              <button type="submit" aria-label="Sign out" className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-muted transition hover:bg-surface-2 hover:text-ink">
-                <LogOut className="h-4 w-4" aria-hidden />
-              </button>
-            </form>
-          </div>
-        </div>
       </aside>
 
-      <div className="min-w-0 md:ml-[238px]">
-        <header className="header-glass sticky top-0 z-20 flex h-[72px] items-center gap-3 border-b border-line px-4 md:px-[30px]">
+      <div className={`min-w-0 transition-[margin] duration-200 ease-out motion-reduce:transition-none ${sidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-[238px]'}`}>
+        <header className="header-glass sticky top-0 z-20 flex h-16 items-center gap-1.5 border-b border-line px-3 md:gap-3 md:px-[30px]">
           <button
             ref={menuButtonRef}
             type="button"
@@ -183,6 +222,18 @@ export function DashboardChrome({
           >
             {menuOpen ? <X className="h-4 w-4" aria-hidden /> : <Menu className="h-4 w-4" aria-hidden />}
           </button>
+          <button
+            type="button"
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-controls="dashboard-navigation"
+            aria-pressed={sidebarCollapsed}
+            onClick={toggleSidebar}
+            className="hidden h-10 w-10 shrink-0 place-items-center rounded-lg text-muted transition hover:bg-surface-2 hover:text-ink md:grid"
+          >
+            {sidebarCollapsed
+              ? <PanelLeftOpen className="h-4 w-4" aria-hidden />
+              : <PanelLeftClose className="h-4 w-4" aria-hidden />}
+          </button>
           <p className="min-w-0 truncate text-sm text-muted">
             <span className="hidden sm:inline">Workspace <span className="mx-2 text-faint">/</span></span>
             <span className="font-semibold text-ink">{pageTitle}</span>
@@ -191,13 +242,62 @@ export function DashboardChrome({
             <CommandPalette />
           </div>
           <ThemeToggle compact />
-          <div className="hidden max-w-48 items-center gap-2 lg:flex">
-            <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-2 text-sm font-bold text-primary">{initials || '?'}</span>
-            <span className="truncate text-xs font-semibold text-ink">{userEmail}</span>
+          <div ref={profileMenuRef} className="relative shrink-0">
+            <button
+              ref={profileButtonRef}
+              type="button"
+              aria-label={profileOpen ? 'Close profile menu' : 'Open profile menu'}
+              aria-controls="profile-menu"
+              aria-expanded={profileOpen}
+              onClick={() => setProfileOpen((open) => !open)}
+              className="flex min-h-11 items-center gap-2 rounded-lg px-1.5 text-muted transition hover:bg-surface-2 hover:text-ink sm:px-2"
+            >
+              <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-2 text-sm font-bold text-primary">{initials || '?'}</span>
+              <span className="hidden max-w-36 truncate text-xs font-semibold text-ink lg:inline">{userEmail}</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${profileOpen ? 'rotate-180' : ''}`} aria-hidden />
+            </button>
+            <div
+              id="profile-menu"
+              hidden={!profileOpen}
+              role="group"
+              aria-label="Account"
+              className="absolute right-0 top-full z-30 mt-2 w-72 overflow-hidden rounded-xl border border-line bg-surface shadow-elevated"
+            >
+              <div className="border-b border-line px-4 py-3">
+                <p className="truncate text-sm font-semibold text-ink">{userEmail || 'Account'}</p>
+                <p className="mt-0.5 text-xs text-muted">{isPlatformAdmin ? 'Platform admin' : 'Workspace member'}</p>
+              </div>
+              <div className="p-2">
+                {PROFILE_LINKS.map((item) => {
+                  const Icon = NAV_ICONS[item.icon]
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setProfileOpen(false)}
+                      className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted transition hover:bg-surface-2 hover:text-ink"
+                    >
+                      {Icon && <Icon className="h-4 w-4 shrink-0" aria-hidden />}
+                      {item.label}
+                    </Link>
+                  )
+                })}
+              </div>
+              <form action={signOut} className="border-t border-line p-2">
+                <button
+                  type="submit"
+                  onClick={() => setProfileOpen(false)}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted transition hover:bg-surface-2 hover:text-ink"
+                >
+                  <LogOut className="h-4 w-4 shrink-0" aria-hidden />
+                  Sign out
+                </button>
+              </form>
+            </div>
           </div>
         </header>
 
-        <main id="main" tabIndex={-1} className="min-w-0 p-4 focus:outline-none md:px-[30px] md:py-7">
+        <main id="main" tabIndex={-1} className="min-w-0 p-4 focus:outline-none md:px-[30px] md:py-6">
           <div className="mx-auto max-w-[1600px]">
             {children}
           </div>
