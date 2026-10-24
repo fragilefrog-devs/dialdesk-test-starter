@@ -2,14 +2,11 @@ import { SubmitButton } from '@/components/SubmitButton'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { supabaseServer } from '@/lib/supabase/server'
+import { getTimeZoneOptions, INDUSTRY_OPTIONS } from '@/lib/workspace-settings'
 import { createOrganization } from './actions'
 import { btn, input, label, Notice } from '@/components/ui'
 export const metadata: Metadata = { title: 'Set up your company' }
 export const dynamic = 'force-dynamic'
-
-const TRADES = [['plumbing', 'Plumbing'], ['hvac', 'Heating and cooling (HVAC)'], ['plumbing_hvac', 'Plumbing and HVAC']]
-const US_ZONES = ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu']
-const OTHER_ZONES = (typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : ['UTC']).filter((z) => !US_ZONES.includes(z))
 
 export default async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams
@@ -18,6 +15,7 @@ export default async function Onboarding({ searchParams }: { searchParams: Promi
   if (!user) redirect('/login')
   const { data: m } = await supabase.from('memberships').select('org_id').eq('user_id', user.id).limit(1)
   if (m?.length) redirect('/dashboard')
+  const timezoneOptions = getTimeZoneOptions()
 
   return (
     <main className="mx-auto max-w-lg px-5 py-14">
@@ -27,11 +25,11 @@ export default async function Onboarding({ searchParams }: { searchParams: Promi
       <form action={createOrganization} className="space-y-4 rounded-xl border border-line bg-surface p-6 shadow-card">
         <div><label htmlFor="name" className={label}>Company name</label><input id="name" name="name" required minLength={2} maxLength={80} className={input} placeholder="Alder Street Plumbing" /></div>
         <div><label htmlFor="slug" className={label}>Web address</label><input id="slug" name="slug" required minLength={3} maxLength={40} pattern="[a-zA-Z0-9\- ]+" className={input} placeholder="alder-street" /><p className="mt-1 text-xs text-faint">A short unique name for your workspace.</p></div>
-        <div><label htmlFor="industry" className={label}>What do you do?</label><select id="industry" name="industry" className={input}>{TRADES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+        <div><label htmlFor="industry" className={label}>What do you do?</label><select id="industry" name="industry" className={input}>{INDUSTRY_OPTIONS.map(({ value, label: text }) => <option key={value} value={value}>{text}</option>)}</select></div>
         <div><label htmlFor="timezone" className={label}>Time zone</label>
           <select id="timezone" name="timezone" defaultValue="America/Chicago" className={input}>
-            <optgroup label="United States">{US_ZONES.map((z) => <option key={z}>{z}</option>)}</optgroup>
-            <optgroup label="Other">{OTHER_ZONES.map((z) => <option key={z}>{z}</option>)}</optgroup>
+            <optgroup label="United States">{timezoneOptions.us.map((timezone) => <option key={timezone}>{timezone}</option>)}</optgroup>
+            <optgroup label="Other">{timezoneOptions.other.map((timezone) => <option key={timezone}>{timezone}</option>)}</optgroup>
           </select></div>
         <SubmitButton className={`${btn.primary} w-full`}>Create workspace</SubmitButton>
       </form>

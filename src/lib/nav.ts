@@ -25,6 +25,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: '/dashboard/numbers', label: 'Phone numbers', icon: 'numbers' },
       { href: '/dashboard/widget-setup', label: 'Widget setup', icon: 'install' },
       { href: '/dashboard/team', label: 'Team', icon: 'team' },
+      { href: '/dashboard/settings', label: 'Workspace settings', icon: 'settings' },
     ],
   },
 ]

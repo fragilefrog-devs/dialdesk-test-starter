@@ -6,7 +6,7 @@ import { requireOrg } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { limitsFor } from '@/lib/plans'
 import { createNumber, deleteNumber, getNumber } from '@/lib/vapi'
-import { syncAgent } from '@/lib/vapi-sync'
+import { syncAgent, syncOrgAgents } from '@/lib/vapi-sync'
 import { cleanWindows, parseList, TIME_RE } from '@/lib/trades'
 import { sendEmail, escapeHtml } from '@/lib/email'
 import { DAY_KEYS } from '@/lib/time'
@@ -18,6 +18,44 @@ async function adminCtx() {
   return ctx
 }
 const go = (path: string, key: 'error' | 'ok', msg: string): never => redirect(`${path}?${key}=${encodeURIComponent(msg)}`)
+
+// ── Workspace settings ──
+const workspaceSettingsSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  industry: z.enum(['plumbing', 'hvac', 'plumbing_hvac', 'other']),
+  timezone: z.string().min(1).max(64),
+})
+
+export async function saveWorkspaceSettings(fd: FormData) {
+  const { supabase, org } = await adminCtx()
+  const parsed = workspaceSettingsSchema.safeParse(Object.fromEntries(fd))
+  if (!parsed.success) return go('/dashboard/settings', 'error', 'Check the workspace name, industry, and time zone.')
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: parsed.data.timezone })
+  } catch {
+    return go('/dashboard/settings', 'error', 'Choose a valid time zone.')
+  }
+
+  const { error } = await supabase.from('organizations').update({
+    name: parsed.data.name,
+    industry: parsed.data.industry,
+    timezone: parsed.data.timezone,
+  }).eq('id', org.id)
+  if (error) {
+    console.error('[workspace-settings] Could not save workspace details', { organizationId: org.id, error })
+    return go('/dashboard/settings', 'error', 'Could not save workspace details.')
+  }
+
+  const sync = await syncOrgAgents(org.id)
+  revalidatePath('/dashboard/settings')
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/agent')
+  revalidatePath('/dashboard/appointments')
+  revalidatePath('/dashboard/calls')
+  revalidatePath('/dashboard/leads')
+  if (sync.errors.length) return go('/dashboard/settings', 'error', sync.errors[0])
+  return go('/dashboard/settings', 'ok', 'Workspace settings saved.')
+}
 
 // ── Agent ──
 const e164 = z.string().regex(/^\+[1-9][0-9]{7,14}$/, 'Use international format, like +15551234567')

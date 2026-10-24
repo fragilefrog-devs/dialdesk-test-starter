@@ -2,11 +2,11 @@
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, CalendarCheck, CreditCard, Globe, Hash, LayoutDashboard, MessageSquare, Mic, Phone, ShieldCheck, Users, type LucideIcon } from 'lucide-react'
+import { BookOpen, CalendarCheck, CreditCard, Globe, Hash, LayoutDashboard, MessageSquare, Mic, Phone, Settings, ShieldCheck, Users, type LucideIcon } from 'lucide-react'
 
 export const NAV_ICONS: Record<string, LucideIcon> = {
   overview: LayoutDashboard, calls: Phone, messages: MessageSquare, jobs: CalendarCheck, receptionist: Mic,
-  knowledge: BookOpen, numbers: Hash, install: Globe, guide: BookOpen, team: Users, billing: CreditCard, admin: ShieldCheck,
+  knowledge: BookOpen, numbers: Hash, install: Globe, guide: BookOpen, team: Users, settings: Settings, billing: CreditCard, admin: ShieldCheck,
 }
 
 export function NavLink({ href, icon, children, onNavigate, collapsed = false }: { href: string; icon: string; children: React.ReactNode; onNavigate?: () => void; collapsed?: boolean }) {

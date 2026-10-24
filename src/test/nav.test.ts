@@ -7,6 +7,7 @@ describe('dashboard navigation', () => {
     expect(new Set(hrefs).size).toBe(hrefs.length)
     expect(hrefs).toContain('/dashboard/billing')
     expect(hrefs).toContain('/appointment')
+    expect(hrefs).toContain('/dashboard/settings')
   })
 
   it('keeps billing out of the sidebar and exposes account links in the profile menu', () => {
