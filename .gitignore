@@ -37,8 +37,6 @@ yarn-error.log*
 .env.local
 .env.*.local
 !.env.example
-legacy/voice-gateway/node_modules
-legacy/voice-gateway/dist
 
 # local logs and agent scratch
 *.log

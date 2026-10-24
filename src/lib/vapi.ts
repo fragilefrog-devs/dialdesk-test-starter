@@ -57,6 +57,7 @@ export function buildAssistantPayload(input: AssistantInput) {
   return {
     name: input.name.slice(0, 40),
     firstMessage: input.firstMessage,
+    firstMessageInterruptionsEnabled: true,
     model: {
       provider: e.VAPI_MODEL_PROVIDER,
       model: e.VAPI_MODEL,
@@ -64,8 +65,20 @@ export function buildAssistantPayload(input: AssistantInput) {
       messages: [{ role: 'system', content: input.systemPrompt }],
       tools: [...functionTools, ...transferTool],
     },
-    voice: { provider: e.VAPI_VOICE_PROVIDER, voiceId: input.voiceId },
-    transcriber: { provider: e.VAPI_TRANSCRIBER_PROVIDER, model: e.VAPI_TRANSCRIBER_MODEL, language: input.language },
+    voice: {
+      provider: e.VAPI_VOICE_PROVIDER,
+      ...(e.VAPI_VOICE_PROVIDER === 'openai' && e.VAPI_VOICE_MODEL ? { model: e.VAPI_VOICE_MODEL } : {}),
+      voiceId: input.voiceId,
+    },
+    transcriber: {
+      provider: e.VAPI_TRANSCRIBER_PROVIDER,
+      model: e.VAPI_TRANSCRIBER_PROVIDER === 'deepgram'
+        && e.VAPI_TRANSCRIBER_MODEL === 'flux-general-en'
+        && !input.language.toLowerCase().startsWith('en')
+        ? 'nova-3'
+        : e.VAPI_TRANSCRIBER_MODEL,
+      language: input.language,
+    },
     server: e.VAPI_SERVER_CREDENTIAL_ID
       ? { url, credentialId: e.VAPI_SERVER_CREDENTIAL_ID }
       : { url, secret: e.VAPI_WEBHOOK_SECRET },

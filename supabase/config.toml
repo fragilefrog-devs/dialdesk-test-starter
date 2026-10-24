@@ -1,0 +1,60 @@
+project_id = "dialdesk"
+
+[auth.email.template.invite]
+subject = "You are invited to DialDesk"
+content_path = "./supabase/templates/auth/invite.html"
+
+[auth.email.template.confirmation]
+subject = "Confirm your DialDesk email"
+content_path = "./supabase/templates/auth/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Reset your DialDesk password"
+content_path = "./supabase/templates/auth/recovery.html"
+
+[auth.email.template.magic_link]
+subject = "Your DialDesk sign-in link"
+content_path = "./supabase/templates/auth/magic_link.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new DialDesk email"
+content_path = "./supabase/templates/auth/email_change.html"
+
+[auth.email.template.reauthentication]
+subject = "Your DialDesk verification code"
+content_path = "./supabase/templates/auth/reauthentication.html"
+
+[auth.email.notification.password_changed]
+enabled = true
+subject = "Your DialDesk password was changed"
+content_path = "./supabase/templates/auth/password_changed_notification.html"
+
+[auth.email.notification.email_changed]
+enabled = true
+subject = "Your DialDesk email address was changed"
+content_path = "./supabase/templates/auth/email_changed_notification.html"
+
+[auth.email.notification.phone_changed]
+enabled = true
+subject = "Your DialDesk phone number was changed"
+content_path = "./supabase/templates/auth/phone_changed_notification.html"
+
+[auth.email.notification.mfa_factor_enrolled]
+enabled = true
+subject = "A sign-in verification method was added"
+content_path = "./supabase/templates/auth/mfa_factor_enrolled_notification.html"
+
+[auth.email.notification.mfa_factor_unenrolled]
+enabled = true
+subject = "A sign-in verification method was removed"
+content_path = "./supabase/templates/auth/mfa_factor_unenrolled_notification.html"
+
+[auth.email.notification.identity_linked]
+enabled = true
+subject = "A sign-in method was linked"
+content_path = "./supabase/templates/auth/identity_linked_notification.html"
+
+[auth.email.notification.identity_unlinked]
+enabled = true
+subject = "A sign-in method was removed"
+content_path = "./supabase/templates/auth/identity_unlinked_notification.html"

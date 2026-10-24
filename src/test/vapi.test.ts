@@ -31,6 +31,8 @@ describe('assistant payload', () => {
   it('points the assistant at our webhook with the secret and the right server messages', () => {
     const p = buildAssistantPayload(input)
     expect(p.server).toEqual({ url: 'https://app.example.com/api/vapi/webhook', secret: SECRET })
+    expect(p.firstMessageInterruptionsEnabled).toBe(true)
+    expect(p.voice).toEqual({ provider: 'openai', model: 'gpt-4o-mini-tts', voiceId: 'alloy' })
     expect(p.serverMessages).toEqual(['tool-calls', 'end-of-call-report'])
     expect(p.clientMessages).toEqual(['transcript'])
     expect(p.artifactPlan.recordingEnabled).toBe(true)
@@ -46,6 +48,17 @@ describe('assistant payload', () => {
     const names = p.model.tools.map((t) => ('function' in t ? t.function.name : t.type))
     expect(names).toEqual([...TOOL_DEFS.map((t) => t.name), 'transferCall'])
     expect(buildAssistantPayload({ ...input, transfers: [] }).model.tools).toHaveLength(TOOL_DEFS.length)
+  })
+  it('requires explicit caller confirmation before the booking tool can book', () => {
+    const booking = TOOL_DEFS.find((tool) => tool.name === 'book_job')
+    expect(booking?.parameters.required).toContain('caller_confirmed')
+  })
+  it('uses low-latency Deepgram Flux for English and Nova 3 for other languages', async () => {
+    vi.stubEnv('VAPI_TRANSCRIBER_MODEL', 'flux-general-en')
+    vi.resetModules()
+    const fresh = await import('@/lib/vapi')
+    expect(fresh.buildAssistantPayload(input).transcriber.model).toBe('flux-general-en')
+    expect(fresh.buildAssistantPayload({ ...input, language: 'fr' }).transcriber.model).toBe('nova-3')
   })
 })
 

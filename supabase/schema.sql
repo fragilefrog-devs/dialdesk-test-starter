@@ -171,6 +171,7 @@ create table if not exists public.appointments (
   zip text,
   issue text,
   urgency text check (urgency in ('emergency','same_day','routine')),
+  email_confirmation_consented_at timestamptz,
   created_at timestamptz not null default now(),
   check (ends_at > starts_at)
 );
@@ -374,10 +375,12 @@ grant execute on function public.create_organization(text,text,text,text) to aut
 
 -- Capacity-aware booking: several techs can take the same arrival window.
 -- The advisory lock serializes bookings for one org + window, so the count-then-insert is race-free.
+drop function if exists public.book_trade_job(uuid,uuid,uuid,text,timestamptz,timestamptz,integer,text,text,text,text,text);
 create or replace function public.book_trade_job(
   p_org uuid, p_call uuid, p_contact uuid, p_service text,
   p_starts timestamptz, p_ends timestamptz, p_capacity integer,
-  p_address text, p_zip text, p_issue text, p_urgency text, p_notes text
+  p_address text, p_zip text, p_issue text, p_urgency text, p_notes text,
+  p_email_confirmation_consented_at timestamptz default null
 ) returns table (out_id uuid, out_status text)
 language plpgsql security definer set search_path = public as $$
 declare v_count integer; v_id uuid;
@@ -389,12 +392,18 @@ begin
     return query select null::uuid, 'full'::text;
     return;
   end if;
-  insert into appointments (org_id, contact_id, call_id, service, starts_at, ends_at, address, zip, issue, urgency, notes)
-  values (p_org, p_contact, p_call, p_service, p_starts, p_ends, p_address, p_zip, p_issue, p_urgency, p_notes)
+  insert into appointments (
+    org_id, contact_id, call_id, service, starts_at, ends_at, address, zip, issue, urgency, notes,
+    email_confirmation_consented_at
+  )
+  values (
+    p_org, p_contact, p_call, p_service, p_starts, p_ends, p_address, p_zip, p_issue, p_urgency, p_notes,
+    p_email_confirmation_consented_at
+  )
   returning id into v_id;
   return query select v_id, 'booked'::text;
 end $$;
-revoke all on function public.book_trade_job(uuid,uuid,uuid,text,timestamptz,timestamptz,integer,text,text,text,text,text)
+revoke all on function public.book_trade_job(uuid,uuid,uuid,text,timestamptz,timestamptz,integer,text,text,text,text,text,timestamptz)
   from public, anon, authenticated;
-grant execute on function public.book_trade_job(uuid,uuid,uuid,text,timestamptz,timestamptz,integer,text,text,text,text,text)
+grant execute on function public.book_trade_job(uuid,uuid,uuid,text,timestamptz,timestamptz,integer,text,text,text,text,text,timestamptz)
   to service_role;

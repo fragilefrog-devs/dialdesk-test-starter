@@ -34,6 +34,19 @@ describe('trades prompt', () => {
     expect(off).toContain('Emergency dispatch is OFF')
     expect(off).not.toContain('configured transfer after flag_emergency')
   })
+  it('asks permission before collecting an email confirmation address', () => {
+    const prompt = buildSystemPrompt(org, agent)
+    expect(prompt).toContain('offer an optional email confirmation')
+    expect(prompt).toContain('Only collect an email address and set email_confirmation_consent to true if the caller clearly agrees')
+    expect(prompt).toContain('Follow the book_job email_confirmation result exactly')
+  })
+  it('directs the assistant to book confirmed visits and use natural, concise speech', () => {
+    const prompt = buildSystemPrompt(org, agent)
+    expect(prompt).toContain('book a visit directly')
+    expect(prompt).toContain('Set caller_confirmed to true only after that confirmation')
+    expect(prompt).toContain('Sound conversational rather than scripted')
+    expect(prompt).toContain('Do not promise a callback')
+  })
   it('falls back to a message when a transfer is impossible (website calls)', () => {
     expect(buildSystemPrompt(org, agent)).toContain('including on website calls')
     expect(buildSystemPrompt(org, agent)).toContain('offer to take a message with capture_lead')

@@ -2,6 +2,8 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { runAfter } from '@/lib/after'
 import { notifyOwner } from '@/lib/notify'
 import { sendSms } from '@/lib/sms'
+import { sendTemplateEmail } from '@/lib/email'
+import { parseConsentedEmail } from '@/lib/email-templates'
 import type { ToolDef } from '@/lib/vapi'
 import {
   asHazard, asUrgency, bestOutcome, cleanWindows, inServiceArea, isOfficeOpen, LIFE_SAFETY_HAZARDS,
@@ -44,9 +46,12 @@ export const TOOL_DEFS: readonly ToolDef[] = [
         urgency: { type: 'string', enum: ['emergency', 'same_day', 'routine'] },
         service: { type: 'string', description: 'Which listed service this is' },
         start_local: { type: 'string', description: 'Window start, exactly as returned: YYYY-MM-DDTHH:mm' },
+        caller_confirmed: { type: 'boolean', description: 'True only after the caller explicitly confirms the read-back of their booking details and selected window' },
         notes: { type: 'string' },
+        email: { type: 'string', description: 'Caller email, only if they explicitly agreed to receive this booking confirmation' },
+        email_confirmation_consent: { type: 'boolean', description: 'True only after the caller explicitly agrees to receive a booking confirmation by email' },
       },
-      required: ['name', 'phone', 'address', 'postcode', 'issue', 'start_local'],
+      required: ['name', 'phone', 'address', 'postcode', 'issue', 'start_local', 'caller_confirmed'],
     },
   },
   {
@@ -109,9 +114,14 @@ async function agentConfig(ctx: ToolCtx) {
 
 async function upsertContact(orgId: string, name: string, phone: string, email?: string) {
   const clean = phone.replace(/[^+0-9]/g, '')
-  const { data } = await supabaseAdmin().from('contacts')
-    .upsert({ org_id: orgId, name: name || null, phone: clean, email: email || null }, { onConflict: 'org_id,phone' })
+  const contact: { org_id: string; name: string | null; phone: string; email?: string } = {
+    org_id: orgId, name: name || null, phone: clean,
+  }
+  if (email) contact.email = email
+  const { data, error } = await supabaseAdmin().from('contacts')
+    .upsert(contact, { onConflict: 'org_id,phone' })
     .select('id').single()
+  if (error) throw error
   return data?.id as string | undefined
 }
 
@@ -163,8 +173,12 @@ export async function executeTool(ctx: ToolCtx, name: string, args: Args): Promi
         const slots = windowsForDate(date, cleanWindows(agent.arrival_windows), agent.business_hours as Record<string, [string, string]>, org.timezone)
         if (!slots.length) return { windows: [], note: 'No windows that day (closed or too soon). Offer another day.' }
         const first = slots[0].startsAt.toISOString(), last = slots[slots.length - 1].endsAt.toISOString()
-        const { data: booked } = await db.from('appointments').select('starts_at, ends_at')
+        const { data: booked, error: bookingsError } = await db.from('appointments').select('starts_at, ends_at')
           .eq('org_id', ctx.orgId).eq('status', 'booked').gte('starts_at', first).lte('ends_at', last)
+        if (bookingsError) {
+          console.error('[tool] check_availability could not load existing bookings', { organizationId: ctx.orgId, error: bookingsError })
+          return { error: 'Could not check availability right now. Apologize and offer to take a message.' }
+        }
         const cap = agent.jobs_per_window as number
         const open = slots.map((s) => ({
           start_local: s.start_local, label: s.label,
@@ -180,6 +194,9 @@ export async function executeTool(ctx: ToolCtx, name: string, args: Args): Promi
         const postcode = str(args.postcode, 12), issue = str(args.issue, 300), start = str(args.start_local, 16)
         if (!name || !PHONE_OK.test(phoneRaw)) return { error: 'Need a valid name and callback number.' }
         if (address.length < 5 || !postcode || !issue) return { error: 'Need the service address, postcode and the issue.' }
+        if (args.caller_confirmed !== true) return { error: 'Ask the caller to confirm the read-back and selected arrival window before booking.' }
+        const emailConsent = parseConsentedEmail(args.email, args.email_confirmation_consent)
+        if (emailConsent.error) return { error: emailConsent.error }
         const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/.exec(start)
         if (!m) return { error: 'start_local must be a window start exactly as returned by check_availability.' }
         const { org, agent } = await agentConfig(ctx)
@@ -189,23 +206,58 @@ export async function executeTool(ctx: ToolCtx, name: string, args: Args): Promi
           .find((s) => s.start_local === start)
         if (!slot) return { error: 'That is not an open window. Call check_availability again and offer one of those.' }
         const urgency = asUrgency(args.urgency) ?? 'routine'
+        const service = str(args.service, 120) || null
         const contactId = await upsertContact(ctx.orgId, name, phoneRaw)
+        const emailConsentAt = emailConsent.email ? new Date().toISOString() : null
         const { data, error } = await db.rpc('book_trade_job', {
-          p_org: ctx.orgId, p_call: ctx.callId, p_contact: contactId ?? null, p_service: str(args.service, 120) || null,
+          p_org: ctx.orgId, p_call: ctx.callId, p_contact: contactId ?? null, p_service: service,
           p_starts: slot.startsAt.toISOString(), p_ends: slot.endsAt.toISOString(), p_capacity: agent.jobs_per_window,
           p_address: address, p_zip: postcode, p_issue: issue, p_urgency: urgency, p_notes: str(args.notes, 500) || null,
+          p_email_confirmation_consented_at: emailConsentAt,
         })
         const row = Array.isArray(data) ? data[0] : data
-        if (error || !row) return { error: 'Could not book. Offer a callback with capture_lead.' }
+        if (error || !row) {
+          if (error) console.error('[tool] book_job database booking failed', { organizationId: ctx.orgId, error })
+          return { error: 'Could not book. Offer another available window or ask permission to take a callback message.' }
+        }
         if (row.out_status === 'full') return { error: 'That window just filled up. Offer another window.' }
+        if (row.out_status !== 'booked') {
+          console.error('[tool] book_job returned an unexpected booking status', { organizationId: ctx.orgId, status: row.out_status })
+          return { error: 'Could not confirm that booking. Offer another available window or ask permission to take a callback message.' }
+        }
+        if (emailConsent.email) {
+          try {
+            await upsertContact(ctx.orgId, name, phoneRaw, emailConsent.email)
+          } catch (error) {
+            console.error('[booking-email] Could not save the consented caller email', error)
+          }
+        }
         await markCall(ctx, 'booked', urgency)
         const when = `${slot.label} on ${m[1]}`
         runAfter(async () => {
-          await notifyOwner(ctx.orgId, ctx.agentId, `New job booked: ${name}`, `${issue}\n${address} ${postcode}\n${when}\nCallback: ${phoneRaw}`)
+          await notifyOwner(ctx.orgId, ctx.agentId, {
+            kind: 'booking', callerName: name, callbackNumber: phoneRaw, address, postcode, issue, service, urgency,
+            date: m[1], arrivalWindow: slot.label,
+          })
           const to = toE164(phoneRaw, ctx.callerNumber)
           if (to) await sendSms(to, `${org.name}: you're booked for ${when}. A technician will arrive within that window. Reply to this number if you need to change it.`)
         })
-        return { booked: true, window: slot.label, date: m[1], tell_caller: 'A technician arrives sometime inside that window, and a text confirmation is on its way.' }
+        const emailSent = emailConsent.email
+          ? await sendTemplateEmail(emailConsent.email, {
+              kind: 'booking-confirmation', organizationName: org.name, callerName: name, callbackNumber: phoneRaw,
+              address, postcode, issue, service, date: m[1], arrivalWindow: slot.label, timezone: org.timezone,
+            })
+          : null
+        const tellCaller = emailSent === true
+          ? `Your booking is confirmed for ${slot.label} on ${m[1]}. An email confirmation was submitted to ${emailConsent.email}.`
+          : emailSent === false
+            ? `Your booking is confirmed for ${slot.label} on ${m[1]}, but the email confirmation could not be sent.`
+            : `Your booking is confirmed for ${slot.label} on ${m[1]}. A technician will arrive during that window, not at an exact guaranteed time.`
+        return {
+          booked: true, window: slot.label, date: m[1],
+          email_confirmation: emailSent === null ? 'not_requested' : emailSent ? 'sent' : 'failed',
+          tell_caller: tellCaller,
+        }
       }
 
       case 'flag_emergency': {
@@ -220,7 +272,9 @@ export async function executeTool(ctx: ToolCtx, name: string, args: Args): Promi
           summary: issue || null, urgency: 'emergency', address: address || null, zip: str(args.postcode, 12) || null, issue: issue || null,
         })
         await markCall(ctx, 'emergency_escalated', 'emergency')
-        const alert = await notifyOwner(ctx.orgId, ctx.agentId, `EMERGENCY (${hazard})`, `${issue}\n${address || 'address not given'}\nCaller: ${name || 'unknown'} ${phoneRaw || ''}`.trim())
+        const alert = await notifyOwner(ctx.orgId, ctx.agentId, {
+          kind: 'emergency', hazard, issue, address, callerName: name, callbackNumber: phoneRaw,
+        })
         return {
           alerted: alert.sms || alert.email,
           oncall_transfer_available: !!agent?.oncall_number && agent.emergency_service !== false,
@@ -241,8 +295,11 @@ export async function executeTool(ctx: ToolCtx, name: string, args: Args): Promi
         })
         if (error) return { error: 'Could not save. Apologize and ask them to call back.' }
         await markCall(ctx, 'lead_captured', urgency)
-        runAfter(() => notifyOwner(ctx.orgId, ctx.agentId, `${urgency === 'emergency' ? 'URGENT message' : 'New message'}: ${name}`, `${intent}\n${str(args.summary, 400)}\nCallback: ${phoneRaw}`))
-        return { saved: true, tell_caller: 'Someone will call them back.' }
+        runAfter(() => notifyOwner(ctx.orgId, ctx.agentId, {
+          kind: 'lead', callerName: name, callbackNumber: phoneRaw, intent, summary: str(args.summary, 400),
+          address: str(args.address, 200), postcode: str(args.postcode, 12), issue: str(args.issue, 300), urgency,
+        }))
+        return { saved: true, tell_caller: 'Your request has been saved for the team. I can’t promise a callback time.' }
       }
 
       default:

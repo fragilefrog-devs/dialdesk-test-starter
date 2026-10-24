@@ -12,7 +12,7 @@ Answer every call 24/7, triage emergencies, book repairs into arrival windows, a
 
 ## Call flows (MVP)
 1. **Emergency:** burst pipe, flooding, sewage, no heat or cooling, gas smell, CO alarm, sparks. Safety script first for gas/CO/electrical, `flag_emergency` texts the owner, then transfer to the on-call tech.
-2. **Repair booking:** problem and urgency, address and postcode, service-area check, availability, read-back, `book_job`, SMS confirmation.
+2. **Repair booking:** problem and urgency, address and postcode, service-area check, availability, read-back, explicit caller confirmation, then `book_job`. Send SMS confirmation; offer email confirmation as an optional, explicit opt-in.
 3. **Estimate request:** book an estimate visit for installs and replacements; no price quoting.
 4. **Existing customer or other:** office transfer in hours, otherwise a message to the owner.
 5. **After hours:** emergencies per the owner's policy; routine work booked for the next open day.
@@ -24,7 +24,8 @@ A "Talk to us" button for the customer's site: `widget.js` opens an iframe (`/em
 ## Functional requirements
 - Per-tenant configuration: services, postcodes, arrival windows, jobs per window, office hours, on-call and office numbers, alert phone and email, recording on/off.
 - Booking by arrival window with per-window capacity, race-free.
-- Owner SMS and email alerts for emergencies, new jobs and messages; caller SMS confirmation (needs a registered SMS sender).
+- Owner SMS and email alerts for emergencies, new jobs and messages; caller SMS confirmation (needs a registered SMS sender); optional caller booking email only after explicit consent.
+- Store the caller's email only when they opt in to a booking confirmation, and record that consent on the appointment. A send failure must not undo a booked visit or be reported as a sent email.
 - Dashboard: calls (outcome, urgency, summary, transcript, recording), messages, jobs, numbers, billing, team.
 - Billing by plan with included minutes and overage; lapsed accounts stop answering.
 - Plan changes: Stripe Checkout and the billing portal manage subscriptions. After a successful Checkout return, the server verifies the session, payment, customer, workspace and subscription price, then persists the plan and subscription status before the UI presents the new plan as current. The dashboard refreshes from the persisted organization record. Portal returns reconcile the current subscription from Stripe.

@@ -12,7 +12,6 @@ DialDesk: a multi-tenant AI phone receptionist for plumbing and HVAC companies. 
 - `src/app/api/billing/checkout`, `portal`, `confirm`, `src/app/api/webhooks/stripe/route.ts`, and `src/lib/billing-sync.ts`: Stripe checkout/portal, verified plan confirmation, subscription persistence, and webhook reconciliation. `src/components/BillingConfirmation.tsx` refreshes the billing UI after backend confirmation.
 - `src/components/DashboardChrome.tsx`: shared dashboard shell and mobile navigation drawer. `src/components/marketing.tsx` owns the reusable `BrandMark` and `Wordmark`; `public/dialdesk-mark.svg` is the shared app icon.
 - `supabase/schema.sql` is the full schema; `supabase/migrations/` holds additive changes for existing databases. Update both.
-- `legacy/voice-gateway/`: the retired self-hosted voice path. Nothing in `src/` may import it.
 
 ## Invariants
 - Scope every tenant query to `org_id`. The tenant is resolved from the Vapi assistant id on the call, never from tool arguments.

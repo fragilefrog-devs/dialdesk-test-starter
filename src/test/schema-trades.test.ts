@@ -1,12 +1,13 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-const read = (p: string) => readFileSync(new URL(`../../${p}`, import.meta.url), 'utf8')
+const read = (p: string) => readFileSync(new URL(`../../${p}`, import.meta.url), 'utf8').replace(/\r\n/g, '\n')
 const schema = read('supabase/schema.sql')
 const migration = read('supabase/migrations/20261023_trades_vapi.sql')
 
 const widgetMigration = read('supabase/migrations/20261024_web_widget.sql')
 const widgetAppearanceMigration = read('supabase/migrations/20261024145100_widget_appearance.sql')
+const emailMigration = read('supabase/migrations/20261024182000_email_notifications.sql')
 describe('widget schema', () => {
   it('adds the widget columns and a unique token to the schema and the migration', () => {
     for (const sql of [schema, widgetMigration]) for (const c of ['widget_enabled', 'widget_domains', 'widget_token', 'agents_widget_token_key']) expect(sql).toContain(c)
@@ -22,6 +23,21 @@ describe('trades schema', () => {
       expect(sql).toContain('create or replace function public.book_trade_job(')
       expect(sql).toContain('pg_advisory_xact_lock')
     }
+  })
+
+  describe('booking email consent schema', () => {
+    it('records confirmation consent on the appointment and passes it through the atomic booking function', () => {
+      for (const sql of [schema, emailMigration]) {
+        expect(sql).toContain('email_confirmation_consented_at timestamptz')
+        expect(sql).toContain('p_email_confirmation_consented_at timestamptz')
+        expect(sql).toContain('email_confirmation_consented_at\n  )')
+      }
+    })
+
+    it('keeps the updated booking function service-role only', () => {
+      expect(emailMigration).toMatch(/revoke all on function public\.book_trade_job\([\s\S]*from public, anon, authenticated/i)
+      expect(emailMigration).toMatch(/grant execute on function public\.book_trade_job\([\s\S]*to service_role/i)
+    })
   })
   it('keeps booking and finalization service-role only', () => {
     expect(schema).toMatch(/revoke all on function public\.book_trade_job[\s\S]*from public, anon, authenticated/)

@@ -23,11 +23,12 @@ const schema = z.object({
   VAPI_WEBHOOK_SECRET: z.string().min(16),
   // Optional: id of a Vapi custom credential holding the same secret (preferred over inline secret)
   VAPI_SERVER_CREDENTIAL_ID: z.string().min(1).optional(),
-  VAPI_MODEL_PROVIDER: z.string().min(1).default('openai'),
-  VAPI_MODEL: z.string().min(1).default('gpt-4o'),
+  VAPI_MODEL_PROVIDER: z.string().min(1).default('google'),
+  VAPI_MODEL: z.string().min(1).default('gemini-3.1-flash-lite'),
   VAPI_VOICE_PROVIDER: z.string().min(1).default('openai'),
+  VAPI_VOICE_MODEL: z.string().min(1).default('gpt-4o-mini-tts'),
   VAPI_TRANSCRIBER_PROVIDER: z.string().min(1).default('deepgram'),
-  VAPI_TRANSCRIBER_MODEL: z.string().min(1).default('nova-2'),
+  VAPI_TRANSCRIBER_MODEL: z.string().min(1).default('flux-general-en'),
 
   RESEND_API_KEY: z.string().min(1),
   EMAIL_FROM: z.string().min(1),
@@ -63,6 +64,7 @@ export const stripeEnv = scoped(schema.pick({
 export const vapiEnv = scoped(schema.pick({
   VAPI_API_KEY: true, VAPI_WEBHOOK_SECRET: true, VAPI_SERVER_CREDENTIAL_ID: true,
   VAPI_MODEL_PROVIDER: true, VAPI_MODEL: true, VAPI_VOICE_PROVIDER: true,
+  VAPI_VOICE_MODEL: true,
   VAPI_TRANSCRIBER_PROVIDER: true, VAPI_TRANSCRIBER_MODEL: true,
 }).extend({ NEXT_PUBLIC_APP_URL: z.string().url() }))
 export const emailEnv = scoped(schema.pick({ RESEND_API_KEY: true, EMAIL_FROM: true, ADMIN_EMAILS: true }))

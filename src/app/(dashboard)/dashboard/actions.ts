@@ -8,7 +8,8 @@ import { limitsFor } from '@/lib/plans'
 import { createNumber, deleteNumber, getNumber } from '@/lib/vapi'
 import { syncAgent, syncOrgAgents } from '@/lib/vapi-sync'
 import { cleanWindows, parseList, TIME_RE } from '@/lib/trades'
-import { sendEmail, escapeHtml } from '@/lib/email'
+import { appEnv } from '@/lib/env'
+import { sendTemplateEmail } from '@/lib/email'
 import { DAY_KEYS } from '@/lib/time'
 import { parseDomains, WIDGET_ACCENT_RE } from '@/lib/widget'
 
@@ -194,11 +195,20 @@ export async function inviteMember(fd: FormData) {
   if (!p.success) return go('/dashboard/team', 'error', 'Enter a valid email.')
   const { count } = await supabase.from('memberships').select('user_id', { count: 'exact', head: true }).eq('org_id', org.id)
   if ((count ?? 0) >= limitsFor(org.plan).seats) return go('/dashboard/team', 'error', 'Seat limit reached — upgrade for more seats.')
-  const { data: inv, error } = await supabase.from('invites').insert({ org_id: org.id, ...p.data! }).select('token').single()
+  const appUrl = appEnv().NEXT_PUBLIC_APP_URL
+  const { data: inv, error } = await supabase.from('invites').insert({ org_id: org.id, ...p.data! }).select('id, token').single()
   if (error || !inv) return go('/dashboard/team', 'error', 'Could not create invite.')
-  const link = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${inv.token}`
-  await sendEmail(p.data!.email, `${org.name} invited you to DialDesk`,
-    `<p>${escapeHtml(user.email ?? 'A teammate')} invited you to join <b>${escapeHtml(org.name)}</b>.</p><p><a href="${link}">Accept invitation</a> (expires in 7 days)</p>`)
+  const delivered = await sendTemplateEmail(p.data!.email, {
+    kind: 'team-invite',
+    inviterEmail: user.email ?? 'A teammate',
+    organizationName: org.name,
+    inviteUrl: `${appUrl}/invite/${inv.token}`,
+  })
+  if (!delivered) {
+    const { error: deleteError } = await supabase.from('invites').delete().eq('org_id', org.id).eq('id', inv.id)
+    if (deleteError) console.error('[team-invite] Could not remove undelivered invite', { organizationId: org.id, error: deleteError.message })
+    return go('/dashboard/team', 'error', 'The invitation email could not be sent. Please try again.')
+  }
   return go('/dashboard/team', 'ok', 'Invitation sent.')
 }
 export async function removeMember(fd: FormData) {
@@ -212,10 +222,18 @@ export async function removeMember(fd: FormData) {
 // ── Leads / appointments ──
 export async function setLeadStatus(fd: FormData) {
   const { supabase, org } = await requireOrg()
+  const id = z.string().uuid().safeParse(fd.get('id'))
   const status = z.enum(['new', 'contacted', 'qualified', 'won', 'lost']).safeParse(fd.get('status'))
-  if (!status.success) return
-  await supabase.from('leads').update({ status: status.data }).eq('org_id', org.id).eq('id', String(fd.get('id')))
+  if (!id.success || !status.success) return go('/dashboard/leads', 'error', 'Choose a valid lead and status.')
+  const { data, error } = await supabase.from('leads').update({ status: status.data })
+    .eq('org_id', org.id).eq('id', id.data).select('id').maybeSingle()
+  if (error) {
+    console.error('[lead-status] Could not update lead status', { organizationId: org.id, leadId: id.data, error })
+    return go('/dashboard/leads', 'error', 'Could not update this lead. Please try again.')
+  }
+  if (!data) return go('/dashboard/leads', 'error', 'This lead was not found in your workspace.')
   revalidatePath('/dashboard/leads')
+  return go('/dashboard/leads', 'ok', 'Lead status updated.')
 }
 export async function cancelAppointment(fd: FormData) {
   const { supabase, org } = await requireOrg()

@@ -21,15 +21,14 @@ Caller ──> Vapi number ──> Vapi assistant (speech, LLM, voice)
 | Checkout, plan confirmation, Stripe webhook reconciliation | `src/app/api/billing/`, `src/app/api/webhooks/stripe/route.ts`, `src/lib/billing-sync.ts` |
 | Shared dashboard shell, brand mark and wordmark | `src/components/DashboardChrome.tsx`, `src/components/marketing.tsx`, `public/dialdesk-mark.svg`, `public/dialdesk-logo.svg` |
 | Schema, RLS, capacity booking | `supabase/schema.sql`, `supabase/migrations/` |
-| Retired self-hosted voice path | `legacy/voice-gateway/` |
 
 ## Local setup
 ```bash
 npm ci
-cp .env.example .env.local     # fill in Supabase, Vapi, Stripe, Resend
+cp .env.example .env.local     # fill in Supabase, Vapi, Stripe, Resend and optional Twilio values
 npm run dev
 ```
-Run `supabase/schema.sql` in your Supabase project. To exercise real calls locally, expose the app with a tunnel and set `NEXT_PUBLIC_APP_URL` to the public URL before creating the assistant (it embeds the webhook URL).
+Run `supabase/schema.sql` in a new Supabase project, or apply the ordered files in `supabase/migrations/` to an existing project. To exercise real calls locally, expose the app with a tunnel and set `NEXT_PUBLIC_APP_URL` to the public URL before creating the assistant (it embeds the webhook URL).
 
 ## Checks
 ```bash
@@ -43,7 +42,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000 NEXT_PUBLIC_SUPABASE_URL=https://examp
 3. Emergencies text the owner immediately and can transfer to the on-call tech. Bookings go through `book_trade_job()`, which enforces per-window capacity.
 4. When the call ends, Vapi sends a report. We store the transcript, summary, recording link and outcome idempotently.
 
-See [PRD.md](PRD.md), [DEPLOYMENT.md](DEPLOYMENT.md), [docs/TEST_CALLS.md](docs/TEST_CALLS.md), [docs/GTM.md](docs/GTM.md) and [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md).
+See [PRD.md](PRD.md) for product behavior, [DEPLOYMENT.md](DEPLOYMENT.md) for provider setup, and the [docs](docs/) for call tests, launch checks, and go-to-market notes.
 
 ## Plan upgrades
 Stripe is authoritative for subscription status. Checkout returns to the billing page with its Checkout Session ID; the authenticated confirmation endpoint verifies the workspace, customer, completed payment, subscription and configured price before saving the organization plan. The billing UI refreshes from Supabase after that confirmation. Portal returns reconcile the current subscription from Stripe. The signed webhook remains the retryable path for later subscription changes and cancellations; pending payments are not shown as active plans.
