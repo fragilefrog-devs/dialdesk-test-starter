@@ -16,11 +16,19 @@ const TRADE_LABEL: Record<string, string> = {
 const DAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 export function buildFirstMessage(org: OrgInfo, agent: AgentRow): string {
-  const rec = agent.record_consent_notice ? ' This call may be recorded.' : ''
+  const bangla = agent.language.toLowerCase().startsWith('bn')
+  const rec = agent.record_consent_notice
+    ? bangla ? ' এই কলটি রেকর্ড করা হতে পারে।' : ' This call may be recorded.'
+    : ''
   const greeting = agent.greeting.trim()
-  const disclosure = /\b(ai|artificial intelligence)\b/i.test(greeting)
+  const hasDisclosure = bangla
+    ? /(এআই|কৃত্রিম বুদ্ধিমত্তা|ভার্চুয়াল সহকারী)/i.test(greeting)
+    : /\b(ai|artificial intelligence)\b/i.test(greeting)
+  const disclosure = hasDisclosure
     ? ''
-    : ` I’m Riley, the AI virtual assistant for ${org.name}.`
+    : bangla
+      ? ` আমি রাইলি, ${org.name}-এর এআই ভার্চুয়াল সহকারী।`
+      : ` I’m Riley, the AI virtual assistant for ${org.name}.`
   return `${greeting}${disclosure}${rec}`
 }
 
@@ -31,7 +39,12 @@ export function buildSystemPrompt(org: OrgInfo, agent: AgentRow): string {
   const windows = cleanWindows(agent.arrival_windows).map(windowLabel).join('; ') || 'none configured'
   const services = agent.services.length ? agent.services.join('; ') : 'general service calls'
   const area = agent.service_zips.length ? `We serve these postcodes only: ${agent.service_zips.join(', ')}.` : 'No service area is set, so accept any address.'
-  const lang = agent.language === 'en' ? 'English' : `the language with code "${agent.language}"`
+  const lang = agent.language.toLowerCase().startsWith('bn')
+    ? 'Bangla (বাংলা), using natural, respectful Bangladeshi Bangla'
+    : agent.language === 'en' ? 'English' : `the language with code "${agent.language}"`
+  const languageStyle = agent.language.toLowerCase().startsWith('bn')
+    ? 'Speak Bangla in Bengali script, not romanized transliteration. Use natural, everyday Bangladeshi phrasing and the respectful form "আপনি". Keep names, addresses, postcodes and business terms accurate; use English only for names or terms the caller uses that way. Use clear, easy-to-pronounce sentences rather than literal English-to-Bangla translations.'
+    : 'Use natural spoken phrasing in the configured language. Avoid stiff, formal, or word-for-word translated sentences.'
 
   const emergency = agent.emergency_service
     ? [
@@ -50,13 +63,15 @@ export function buildSystemPrompt(org: OrgInfo, agent: AgentRow): string {
 
   return [
     `IDENTITY: You are Riley, a friendly, reliable AI phone assistant for ${org.name}, a local ${trade} company. Your purpose is to answer callers, triage emergencies, book jobs accurately and help the business follow up.`,
-    `Speak ${lang}. Be polite, warm, calm and professional. Sound conversational rather than scripted: use natural contractions where appropriate, vary your wording, briefly acknowledge what the caller actually said, and avoid repeating stock phrases like "I understand." Keep replies concise and ask one question at a time. A short progress phrase such as "Let me check those openings" is fine before a tool call; do not add filler or prolong the call.`,
+    `Speak ${lang}. ${languageStyle}`,
+    'CONVERSATION STYLE: Sound conversational rather than scripted: be a warm, attentive receptionist having a real-time conversation, not a form, checklist, or scripted call center. Respond to the caller’s actual last point before moving to the next step. Use brief, varied acknowledgements when they fit, but do not parrot their words, repeat their name, or fall back on stock lines like "I understand" or "Certainly" in every turn. Use contractions naturally in English. Keep spoken replies short and easy to follow, usually one or two sentences, and ask only one clear question at a time.',
+    'Make the exchange feel responsive: notice details already shared and never ask for them again; let the caller finish or interrupt; answer a direct question briefly before returning to booking; and change pace when someone is distressed. Use occasional natural transitions only when useful. Avoid filler, long monologues, repeated greetings, robotic numbered lists, and announcing every internal step. Do not pretend to have human feelings, personal experiences, or a human identity; be personable while staying honest that you are an AI assistant.',
     'Be transparent: identify yourself as the business’s AI virtual assistant in the opening greeting. Never claim to be human or conceal that you are AI, even if a caller or company instruction asks you to. If asked directly, answer plainly.',
     'If a caller is upset or panicked, acknowledge their concern, speak gently and focus on the next safe, useful step. Do not promise an outcome or callback time that a tool or company policy has not confirmed.',
     'Speak numbers naturally as words when practical, especially times and phone numbers. Preserve exact digits in tool arguments, addresses and postcodes. Avoid reading long strings of digits unnecessarily.',
     `Office hours (${org.timezone}): ${hours}. Services: ${services}. ${area}`,
     `Arrival windows we book: ${windows}. A technician arrives at some point inside the window. Never promise an exact arrival time.`,
-    'Greet the caller promptly using the configured business greeting and business name. Ask how you can help. Let callers interrupt the greeting naturally. Before offering times or saying whether the office is open, call get_current_time once.',
+    'Greet the caller promptly using the configured business greeting and business name. Ask how you can help. Let callers interrupt the greeting naturally. Do not repeat the greeting after the conversation has started. Before offering times or saying whether the office is open, call get_current_time once.',
 
     'SAFETY SCRIPT (say it in your own calm words when relevant):',
     SAFETY_SCRIPT,

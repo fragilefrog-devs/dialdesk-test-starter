@@ -45,7 +45,28 @@ describe('trades prompt', () => {
     expect(prompt).toContain('book a visit directly')
     expect(prompt).toContain('Set caller_confirmed to true only after that confirmation')
     expect(prompt).toContain('Sound conversational rather than scripted')
+    expect(prompt).toContain('Respond to the caller’s actual last point')
+    expect(prompt).toContain('never ask for them again')
+    expect(prompt).toContain('Do not pretend to have human feelings, personal experiences, or a human identity')
     expect(prompt).toContain('Do not promise a callback')
+  })
+  it('gives Bangla callers natural Bengali-script speech and a localized disclosure', () => {
+    const banglaAgent = { ...agent, language: 'bn', greeting: 'আল্ডার স্ট্রিট প্লাম্বিংয়ে কল করার জন্য ধন্যবাদ।' }
+    const prompt = buildSystemPrompt(org, banglaAgent)
+    expect(prompt).toContain('Bangla (বাংলা)')
+    expect(prompt).toContain('Speak Bangla in Bengali script, not romanized transliteration')
+    expect(prompt).toContain('respectful form "আপনি"')
+    expect(buildFirstMessage(org, banglaAgent)).toBe(
+      'আল্ডার স্ট্রিট প্লাম্বিংয়ে কল করার জন্য ধন্যবাদ। আমি রাইলি, Alder Street Plumbing-এর এআই ভার্চুয়াল সহকারী। এই কলটি রেকর্ড করা হতে পারে।',
+    )
+  })
+  it('does not duplicate an AI disclosure already present in a Bangla greeting', () => {
+    expect(buildFirstMessage(org, {
+      ...agent,
+      language: 'bn',
+      greeting: 'আমি এআই ভার্চুয়াল সহকারী। কীভাবে সাহায্য করতে পারি?',
+      record_consent_notice: false,
+    })).toBe('আমি এআই ভার্চুয়াল সহকারী। কীভাবে সাহায্য করতে পারি?')
   })
   it('falls back to a message when a transfer is impossible (website calls)', () => {
     expect(buildSystemPrompt(org, agent)).toContain('including on website calls')

@@ -7,7 +7,7 @@ import { cleanWindows } from '@/lib/trades'
 import { btn, Card, input, label, Notice, PageHeader } from '@/components/ui'
 export const metadata: Metadata = { title: 'Receptionist' }
 
-const LANGS: [string, string][] = [['en', 'English'], ['es', 'Spanish'], ['fr', 'French'], ['pt', 'Portuguese']]
+const LANGS: [string, string][] = [['en', 'English'], ['es', 'Spanish'], ['fr', 'French'], ['pt', 'Portuguese'], ['bn', 'Bangla (বাংলা)']]
 const VOICES = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
 const ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 const hint = 'mt-1 text-xs text-faint'

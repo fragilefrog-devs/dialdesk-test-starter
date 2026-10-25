@@ -33,19 +33,6 @@
 				}
 			],
 			"group": "build"
-		},
-		{
-			"label": "Run focused Resend tests temporary",
-			"type": "shell",
-			"command": "npm",
-			"args": [
-				"test",
-				"--",
-				"src/test/email.test.ts",
-				"src/test/booking-tool.test.ts"
-			],
-			"isBackground": false,
-			"problemMatcher": []
 		}
 	]
 }
