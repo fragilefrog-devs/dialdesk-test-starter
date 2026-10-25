@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { Headphones, Phone, PhoneCall, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Headphones, Phone, Play, Square, X } from 'lucide-react'
 import { Card, input, label } from '@/components/ui'
+import { VoiceSynthesizer } from '@/lib/voice-synthesizer'
 
 export function WidgetAppearanceControls({
   initialLabel,
@@ -21,12 +22,40 @@ export function WidgetAppearanceControls({
   const [widgetPosition, setWidgetPosition] = useState(initialPosition)
   const [accent, setAccent] = useState(initialAccent)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [speaking, setSpeaking] = useState(false)
+  const [speechError, setSpeechError] = useState('')
+  const synthesizer = useRef<VoiceSynthesizer | null>(null)
+  useEffect(() => {
+    synthesizer.current = new VoiceSynthesizer()
+    return () => synthesizer.current?.stop()
+  }, [])
   const colorValue = /^#[0-9a-fA-F]{6}$/.test(accent) ? accent : initialAccent
   const channels = colorValue.slice(1).match(/[0-9a-f]{2}/gi)?.map((channel) => {
     const value = parseInt(channel, 16) / 255
     return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
   }) ?? [0, 0, 0]
   const foreground = (0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]) > 0.179 ? '#000000' : '#ffffff'
+
+  const playVoiceSample = () => {
+    setSpeechError('')
+    if (speaking) {
+      synthesizer.current?.stop()
+      setSpeaking(false)
+      return
+    }
+
+    setSpeaking(true)
+    synthesizer.current?.speak(
+      `Hello, thanks for calling ${businessName}. How can I help you today?`,
+      {
+        onEnd: () => setSpeaking(false),
+        onError: (message) => {
+          setSpeaking(false)
+          setSpeechError(message)
+        },
+      },
+    )
+  }
 
   return (
     <div className="grid items-start gap-5 lg:grid-cols-2">
@@ -129,11 +158,17 @@ export function WidgetAppearanceControls({
                 <div className="p-4">
                   <p className="text-sm font-semibold text-ink">Ready when you are</p>
                   <p className="mt-1 text-xs leading-relaxed text-muted">Start a voice call to ask a question or schedule service.</p>
-                  <button type="button" className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold" style={{ backgroundColor: accent, color: foreground }}>
-                    <PhoneCall className="size-4" aria-hidden />
-                    Start voice call
+                  <button
+                    type="button"
+                    onClick={playVoiceSample}
+                    className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold"
+                    style={{ backgroundColor: accent, color: foreground }}
+                  >
+                    {speaking ? <Square className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}
+                    {speaking ? 'Stop voice sample' : 'Play voice sample'}
                   </button>
                   <p className="mt-2 text-center text-[11px] text-faint">Preview only. No call will start.</p>
+                  {speechError && <p role="alert" className="mt-2 text-center text-xs text-danger">{speechError}</p>}
                 </div>
               </div>
             ) : (

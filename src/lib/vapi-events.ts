@@ -27,16 +27,40 @@ const asResult = (v: unknown) => JSON.stringify(v)
 
 export async function handleToolCalls(message: Obj) {
   const calls = parseToolCalls(message)
-  const ctx = await resolveCall(message)
+  if (!calls.length) return { results: [] }
+
+  let ctx: Awaited<ReturnType<typeof resolveCall>>
+  try {
+    ctx = await resolveCall(message)
+  } catch (error) {
+    console.error('[vapi] could not resolve tool-call context', error)
+    return {
+      results: calls.map(({ name, id }) => ({
+        name,
+        toolCallId: id,
+        result: asResult({ error: 'The service is unavailable right now. Apologize and ask the caller to try again later.' }),
+      })),
+    }
+  }
+
   const results = await Promise.all(calls.map(async (c) => {
     if (!ctx || !ctx.live) {
       return { name: c.name, toolCallId: c.id, result: asResult({ error: 'The service is unavailable right now. Apologize and ask the caller to try again later.' }) }
     }
-    const out = await executeTool(
-      { orgId: ctx.agent.org_id, agentId: ctx.agent.id, callId: ctx.call.id, callerNumber: ctx.meta.callerNumber },
-      c.name, c.args,
-    )
-    return { name: c.name, toolCallId: c.id, result: asResult(out) }
+    try {
+      const out = await executeTool(
+        { orgId: ctx.agent.org_id, agentId: ctx.agent.id, callId: ctx.call.id, callerNumber: ctx.meta.callerNumber },
+        c.name, c.args,
+      )
+      return { name: c.name, toolCallId: c.id, result: asResult(out) }
+    } catch (error) {
+      console.error('[vapi] tool call failed', { name: c.name, toolCallId: c.id, error })
+      return {
+        name: c.name,
+        toolCallId: c.id,
+        result: asResult({ error: 'The request could not be completed. Apologize and ask the caller to try again later.' }),
+      }
+    }
   }))
   return { results }
 }
